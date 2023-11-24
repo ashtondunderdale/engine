@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Engine;
+using System.Collections.Generic;
 
 namespace engine;
 
@@ -6,17 +7,15 @@ internal class Engine
 {
     public static List<Project> Projects = new();
     public static Project ActiveProject;
-    public static void RunEngine()
-    {
-        Console.WriteLine("Loaded Engine.");
-        Console.ReadKey(); Console.Clear();
-    }
 
     public static void Launcher()
     {
+        Console.WriteLine("Loaded Launcher.\n");
+        Console.ReadKey(); Console.Clear();
+
         while (true)
         {
-            Console.WriteLine("1. Load Projects\n2. Create a new project\n3. Exit");
+            Console.WriteLine("1. Load Projects\n2. Create a new project\n3. Delete a project\n4. Exit");
             string? input = Console.ReadLine();
 
             switch (input)
@@ -25,7 +24,9 @@ internal class Engine
 
                 case "2": CreateProject(); break;
 
-                case "3":
+                case "3": DeleteProject(); break;
+
+                case "4":
                     if (Helpers.Exit()) { Console.Clear(); continue; }
                     else return;
 
@@ -39,8 +40,7 @@ internal class Engine
         if (Projects.Count == 0)
         {
             Console.WriteLine("\nNo projects to display.");
-            Console.ReadKey();
-            Console.Clear();
+            Console.ReadKey(); Console.Clear();
             return;
         }
 
@@ -52,18 +52,27 @@ internal class Engine
             projectIndex++;
         }
 
-        Console.WriteLine($"\nSelect project to load or enter 0 to exit:");
+        Console.WriteLine("\nSelect a project to load (or enter 'r' to go back).");
 
-        if (int.TryParse(Console.ReadLine(), out int input) && input >= 1 && input <= Projects.Count)
+        string userInput = Console.ReadLine();
+
+        if (userInput.ToLower() == "r")
+        {
+            Console.Clear();
+            return;
+        }
+        else if (int.TryParse(userInput, out int input) && input >= 1 && input <= Projects.Count)
         {
             ActiveProject = Projects[input - 1];
-            Console.WriteLine($"\nLoading project: {ActiveProject.Name}");
+            LoadObjects();
+            RunGameEngine();
         }
-        else if (input == 0) Console.WriteLine("\nExiting LoadProjects.");
-        else Console.WriteLine("\nInvalid input. Please enter a valid project number or 0 to exit.");
+        else
+        {
+            Console.WriteLine("\nInvalid input. Please enter a valid project number or 'r' to go back.");
+        }
 
-        Console.ReadKey();
-        Console.Clear();
+        Console.ReadKey(); Console.Clear();
     }
 
     public static void CreateProject()
@@ -92,11 +101,70 @@ internal class Engine
 
         string ID = Helpers.GenerateString(8);
 
-        List<Object> objects = new();
+        List<GameObject> objects = new();
         Project project = new(projectName, projectDescription, objects, ID);
         Projects.Add(project);
 
         Helpers.OutputGreen("\n  Project added");
         Console.ReadKey(); Console.Clear();
+    }
+
+    public static void DeleteProject()
+    {
+        if (Projects.Count == 0) 
+        { 
+            Console.WriteLine("\nNo projects to delete.");
+            Console.ReadKey(); Console.Clear();
+            return; 
+        }
+
+        while (true)
+        {
+            Console.WriteLine("\nEnter the name of the project to delete (or enter 'r' to go back).");
+            string input = Console.ReadLine();
+
+            if (input == "r")
+            {
+                Console.Clear();
+                break;
+            }
+
+            Project projectToDelete = Projects.FirstOrDefault(p => p.Name == input);
+
+            if (projectToDelete != null)
+            {
+                Projects.Remove(projectToDelete);
+                Console.WriteLine($"\n  Project '{input}' has been deleted.");
+            }
+            else
+            {
+                Console.WriteLine($"\n  Project '{input}' not found. Please enter a valid project name.");
+            }
+
+            Console.ReadKey(); Console.Clear();
+            break;
+        }
+    }
+
+    public static void LoadObjects()
+    {
+        Console.WriteLine($"\nLoading objects: {ActiveProject.Name}");
+
+        GameObject player = new Player(0, 0, "PlayerObject");
+        ActiveProject.Objects.Add(player);
+
+        foreach (var obj in ActiveProject.Objects)
+        {
+            Console.WriteLine($"\n  Type: {obj.GetType().Name}");
+
+            if (obj is Player playerObj) Console.WriteLine($"  Name: {playerObj.Name}\n");
+            else if (obj is Block blockObj) Console.WriteLine($"  Name: {blockObj.Name}\n");
+        }
+        Console.ReadKey(); Console.Clear();
+    }
+
+    public static void RunGameEngine()
+    {
+
     }
 }

@@ -19,7 +19,7 @@ internal class Helpers
     {
         while (true)
         {
-            Console.WriteLine("Confirm exit (y / n)");
+            Console.WriteLine("\nConfirm exit (y / n)");
             string? input = Console.ReadLine().ToLower();
 
             if (input != "y") return true;

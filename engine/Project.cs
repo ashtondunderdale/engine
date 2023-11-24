@@ -1,13 +1,15 @@
-﻿namespace engine;
+﻿using Engine;
+
+namespace engine;
 
 internal class Project
 {
     public string Name;
     public string Description;
-    public List<Object> Objects;
+    public List<GameObject> Objects;
     public string ID;
 
-    public Project(string Name, string Description, List<Object> Objects, string ID) 
+    public Project(string Name, string Description, List<GameObject> Objects, string ID) 
     {
         this.Name = Name;
         this.Description = Description;

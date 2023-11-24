@@ -1,14 +1,43 @@
-﻿namespace engine
+﻿namespace Engine
 {
-    internal class Object
+    internal class GameObject
     {
-        public int X;
-        public int Y;
+        public int X { get; set; }
+        public int Y { get; set; }
+        public virtual string Name { get; set; }
+
+        public GameObject(int x, int y, string name)
+        {
+            X = x;
+            Y = y;
+            Name = name;
+        }
     }
 
-    internal class Player : Object
+    internal class Player : GameObject
     {
-        public int PlayerX => X;
-        public int PlayerY => Y;
+        public Player(int x, int y, string name) : base(x, y, name)
+        {
+        }
+
+        public override string Name
+        {
+            get { return base.Name; }
+            set { base.Name = value; }
+        }
     }
+
+    internal class Block : GameObject
+    {
+        public Block(int x, int y, string name) : base(x, y, name)
+        {
+        }
+
+        public override string Name
+        {
+            get { return base.Name; }
+            set { base.Name = value; }
+        }
+    }
+
 }
