@@ -15,4 +15,16 @@ internal class Helpers
         return new(Enumerable.Repeat("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ", 8)
                                                 .Select(s => s[random.Next(s.Length)]).ToArray());
     }
+    public static bool Exit()
+    {
+        while (true)
+        {
+            Console.WriteLine("Confirm exit (y / n)");
+            string? input = Console.ReadLine().ToLower();
+
+            if (input != "y") return true;
+            else if (input != "n") return false;
+            else continue;
+        }
+    }
 }
