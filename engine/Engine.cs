@@ -112,7 +112,7 @@ internal class Engine
         string ID = Helpers.GenerateString(8);
 
         List<GameObject> objects = new();
-        Project project = new(projectName, projectDescription, objects, ID);
+        Project project = new(projectName, projectDescription, objects, ID, false);
         Projects.Add(project);
 
         Helpers.OutputGreen("\n  Project: ");
@@ -254,8 +254,16 @@ internal class Engine
             switch (input)
             {
                 case "1":
+                    if (ActiveProject.ContainsPlayerObject)
+                    {
+                        Helpers.OutputRed("\n\tYou can only add one player object.");
+                        Helpers.ReadClear();
+                        return;
+                    }
+
                     Player player = new(0, 0, objectName);
                     ActiveProject.Objects.Add(player);
+                    ActiveProject.ContainsPlayerObject = true;
                     break;
 
                 case "2":
@@ -278,6 +286,7 @@ internal class Engine
             return;
         }
     }
+
 
 
     public static void DeleteObject()
