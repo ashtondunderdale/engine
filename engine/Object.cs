@@ -33,7 +33,7 @@
             lastMoveTime = DateTime.Now;
         }
 
-        public void ChasePlayer(Player player)
+        public void ChasePlayer(Player player, List<GameObject> objects)
         {
             TimeSpan elapsed = DateTime.Now - lastMoveTime;
 
@@ -42,14 +42,36 @@
                 int deltaX = Math.Sign(player.X - X);
                 int deltaY = Math.Sign(player.Y - Y);
 
-                if (X + deltaX >= 0 && X + deltaX < Console.WindowWidth && Y + deltaY >= 0 && Y + deltaY < Console.WindowHeight)
+                int newX = X + deltaX;
+                int newY = Y + deltaY;
+
+                if (IsValidMove(newX, newY, objects))
                 {
-                    X += deltaX;
-                    Y += deltaY;
+                    X = newX;
+                    Y = newY;
                 }
 
                 lastMoveTime = DateTime.Now;
             }
         }
+
+        private bool IsValidMove(int x, int y, List<GameObject> objects)
+        {
+            if (x < 0 || x >= Console.WindowWidth || y < 0 || y >= Console.WindowHeight)
+            {
+                return false;
+            }
+
+            foreach (var obj in objects)
+            {
+                if (obj.X == x && obj.Y == y && !(obj is Chaser))
+                {
+                    return false; 
+                }
+            }
+
+            return true;
+        }
     }
+
 }

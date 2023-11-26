@@ -230,8 +230,14 @@ public static void AddObject()
 {
     while (true)
     {
-        Console.WriteLine("\nEnter a command to add an object (e.g., 'player myPlayer 0 0'):");
+        Console.WriteLine("\nEnter a command to add an object (e.g., 'player myPlayer 0 0')\nYou can also enter \'block\' to place blocks");
         string command = Console.ReadLine();
+
+        if (command == "block")
+        {
+            AddBlocks();
+            return;
+        }
 
         try
         {
@@ -269,10 +275,6 @@ public static void AddObject()
                     Player player = new(startingX, startingY, objectName);
                     ActiveProject.Objects.Add(player);
                     ActiveProject.ContainsPlayerObject = true;
-                    break;
-
-                case "block":
-                    AddBlocks();
                     break;
 
                 case "chaser":
@@ -409,7 +411,7 @@ public static void AddObject()
                     break;
             }
 
-            chaser?.ChasePlayer(player);
+            chaser?.ChasePlayer(player, ActiveProject.Objects);
 
             if (player != null && chaser != null && player.X == chaser.X && player.Y == chaser.Y)
             {
@@ -496,9 +498,61 @@ public static void AddObject()
         Projects.Add(sampleProject);
     }
 
-    public static void AddBlocks() 
+    public static void AddBlocks()
     {
+        Block tempBlock = null;
 
+        while (true)
+        {
+            Console.Clear();
+
+            foreach (var block in ActiveProject.Objects.OfType<Block>())
+            {
+                Console.SetCursorPosition(block.X, block.Y);
+                Console.Write("B");
+            }
+
+            if (tempBlock != null)
+            {
+                Console.SetCursorPosition(tempBlock.X, tempBlock.Y);
+                Console.Write("B");
+            }
+
+            ConsoleKeyInfo keyInfo = Console.ReadKey();
+
+            switch (keyInfo.Key)
+            {
+                case ConsoleKey.UpArrow:
+                    if (tempBlock == null || tempBlock.Y > 0) tempBlock = new Block(tempBlock?.X ?? 0, tempBlock?.Y - 1 ?? 0, "Block");
+                    break;
+
+                case ConsoleKey.DownArrow:
+                    if (tempBlock == null || tempBlock.Y < Console.WindowHeight - 1) tempBlock = new Block(tempBlock?.X ?? 0, tempBlock?.Y + 1 ?? 0, "Block");
+                    break;
+
+                case ConsoleKey.LeftArrow:
+                    if (tempBlock == null || tempBlock.X > 0) tempBlock = new Block(tempBlock?.X - 1 ?? 0, tempBlock?.Y ?? 0, "Block");
+                    break;
+
+                case ConsoleKey.RightArrow:
+                    if (tempBlock == null || tempBlock.X < Console.WindowWidth - 1) tempBlock = new Block(tempBlock?.X + 1 ?? 0, tempBlock?.Y ?? 0, "Block");
+                    break;
+
+                case ConsoleKey.Enter:
+                    if (tempBlock != null)
+                    {
+                        ActiveProject.Objects.Add(tempBlock);
+                    }
+                    break;
+
+                case ConsoleKey.Escape:
+                    Console.Clear();
+                    return;
+
+                default:
+                    break;
+            }
+        }
     }
 
 }
