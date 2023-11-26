@@ -9,6 +9,13 @@ internal class Helpers
         Console.ResetColor();
     }
 
+    public static void OutputRed(string message)
+    {
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.WriteLine(message);
+        Console.ResetColor();
+    }
+
     public static string GenerateString(int length) 
     {
         Random random = new();

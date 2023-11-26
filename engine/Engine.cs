@@ -48,28 +48,25 @@ internal class Engine
 
         foreach (var project in Projects)
         {
-            Console.WriteLine($"\n{project.ID}\n  {project.Name}\n  {project.Description}");
+            Console.WriteLine($"\n{projectIndex} | {project.ID}\n  {project.Name}\n  {project.Description}");
             projectIndex++;
         }
 
-        Console.WriteLine("\nSelect a project to load (or enter 'r' to go back).");
+        Console.WriteLine("\nSelect a project to load (or press any key to go back).");
 
         string userInput = Console.ReadLine();
 
-        if (userInput.ToLower() == "r")
-        {
-            Console.Clear();
-            return;
-        }
-        else if (int.TryParse(userInput, out int input) && input >= 1 && input <= Projects.Count)
+        if (int.TryParse(userInput, out int input) && input >= 1 && input <= Projects.Count)
         {
             ActiveProject = Projects[input - 1];
-            LoadObjects();
-            RunGameEngine();
+            Console.Clear();
+            Console.WriteLine("Loaded Project.\n");
+            ListObjects();
+            RunSpace();
         }
         else
         {
-            Console.WriteLine("\nInvalid input. Please enter a valid project number or 'r' to go back.");
+            Console.WriteLine("\nInvalid input. Please enter a valid project number (or press any key to go back).");
         }
 
         Console.ReadKey(); Console.Clear();
@@ -120,14 +117,10 @@ internal class Engine
 
         while (true)
         {
-            Console.WriteLine("\nEnter the name of the project to delete (or enter 'r' to go back).");
-            string input = Console.ReadLine();
+            ListProjects();
 
-            if (input == "r")
-            {
-                Console.Clear();
-                break;
-            }
+            Console.WriteLine("\nEnter the name of the project to delete (or press any key to go back).");
+            string input = Console.ReadLine();
 
             Project projectToDelete = Projects.FirstOrDefault(p => p.Name == input);
 
@@ -146,12 +139,17 @@ internal class Engine
         }
     }
 
-    public static void LoadObjects()
+    public static void ListObjects()
     {
-        Console.WriteLine($"\nLoading objects: {ActiveProject.Name}");
 
-        GameObject player = new Player(0, 0, "PlayerObject");
-        ActiveProject.Objects.Add(player);
+        if (ActiveProject.Objects.Count == 0) 
+        {
+            Console.WriteLine("\nThis project currently has no objects.\nTry adding a player object to the space with \'add\'.\n\nPress enter.");
+            Console.ReadKey(); Console.Clear();
+            return;
+        }
+
+        Console.WriteLine($"\nLoading objects for: {ActiveProject.Name}");
 
         foreach (var obj in ActiveProject.Objects)
         {
@@ -160,11 +158,143 @@ internal class Engine
             if (obj is Player playerObj) Console.WriteLine($"  Name: {playerObj.Name}\n");
             else if (obj is Block blockObj) Console.WriteLine($"  Name: {blockObj.Name}\n");
         }
-        Console.ReadKey(); Console.Clear();
     }
 
-    public static void RunGameEngine()
+    public static void RunSpace()
     {
+        while (true)
+        {
+            Console.WriteLine("Commands:\n\n\'add\' - to add an object into the space\n" +
+                "\'del\' - To remove an object from the space\n" +
+                "\'play\' - To test the game space\n" +
+                "\'load\' - To display all current space objects");
 
+            string input = Console.ReadLine().ToLower().Trim();
+
+            switch (input) 
+            {
+                case "add":
+                    AddObject();
+                    break;
+
+                case "del":
+                    DeleteObject();
+                    break;
+
+                case "play":
+
+                    break;
+
+                case "load":
+                    ListObjects();
+                    Console.ReadKey(); Console.Clear();
+                    break;
+
+                default:
+                    Console.WriteLine("Not a valid command.");
+                    Console.ReadKey(); Console.Clear();
+                    break;
+            }
+
+            // add objects
+            // remove objects, via list index of object + 1
+            // pl, play game
+        }
+    }
+
+    public static void AddObject() 
+    {
+        string objectName = "";
+
+        while (true) 
+        {
+            Console.WriteLine("\nSelect object type to add.\n\n1. Player\n2. Block");
+            string input = Console.ReadLine();
+
+            switch (input) 
+            {
+                case "1":
+                    Console.WriteLine("\nEnter a name for your object");
+                    objectName = Console.ReadLine();
+                    Player player = new(0, 0, objectName);
+                    ActiveProject.Objects.Add(player);
+                    break;
+
+                case "2":
+                    Console.WriteLine("\nEnter a name for your object");
+                    objectName = Console.ReadLine();
+                    Block block = new(0, 0, objectName);
+                    ActiveProject.Objects.Add(block);
+                    break;
+
+                case "3":
+                    break;
+                    
+                default:
+                    Console.WriteLine("\nNot a valid object type");
+                    Console.ReadKey(); Console.Clear();
+                    return;
+            }
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine($"\n\tAdded object: {objectName}");
+            Console.ResetColor();
+
+            Console.ReadKey(); Console.Clear();
+            return;
+        }
+    }
+
+    public static void DeleteObject()
+    {
+        while (true)
+        {
+            if (ActiveProject.Objects.Count == 0)
+            {
+                Console.WriteLine("\nNo objects available to delete.");
+                return;
+            }
+
+            ListObjects();
+
+            Console.WriteLine("\nSelect the object to delete (or enter any key to go back):");
+            string input = Console.ReadLine();
+
+            bool found = false;
+            foreach (var obj in ActiveProject.Objects.ToList())
+            {
+                if (obj.Name == input)
+                {
+                    ActiveProject.Objects.Remove(obj);
+                    Console.WriteLine($"{obj.Name} deleted successfully.");
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found)
+            {
+                Console.WriteLine($"\nObject with name '{input}' not found. Try again.");
+                Console.ReadKey(); Console.Clear();
+                return;
+            }
+        }
+    }
+
+    public static void ListProjects() 
+    {
+        if (Projects.Count == 0)
+        {
+            Console.WriteLine("\nNo projects to display.");
+            Console.ReadKey(); Console.Clear();
+            return;
+        }
+
+        int projectIndex = 1;
+
+        foreach (var project in Projects)
+        {
+            Console.WriteLine($"\n{projectIndex} | {project.ID}\n  {project.Name}\n  {project.Description}");
+            projectIndex++;
+        }
     }
 }
