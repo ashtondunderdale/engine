@@ -11,7 +11,7 @@ internal class Engine
     public static void Launcher()
     {
         Console.WriteLine("Loaded Launcher.\n");
-        Console.ReadKey(); Console.Clear();
+        Helpers.ReadClear();
 
         while (true)
         {
@@ -27,7 +27,10 @@ internal class Engine
                 case "3": DeleteProject(); break;
 
                 case "4":
-                    if (Helpers.Exit()) { Console.Clear(); continue; }
+                    if (Helpers.Exit()) 
+                    { Console.Clear(); 
+                        continue; 
+                    }
                     else return;
 
                 default: Console.Clear(); break;
@@ -39,8 +42,8 @@ internal class Engine
     {
         if (Projects.Count == 0)
         {
-            Console.WriteLine("\nNo projects to display.");
-            Console.ReadKey(); Console.Clear();
+            Helpers.OutputYellow("\nNo projects to display.");
+            Helpers.ReadClear();
             return;
         }
 
@@ -60,16 +63,15 @@ internal class Engine
         {
             ActiveProject = Projects[input - 1];
             Console.Clear();
-            Console.WriteLine("Loaded Project.\n");
-            ListObjects();
+            Helpers.OutputYellow("Loaded Project.\n\n");
             RunSpace();
         }
         else
         {
-            Console.WriteLine("\nInvalid input. Please enter a valid project number (or press any key to go back).");
+            Helpers.OutputRed("\n\tInvalid input. Please enter a valid project number (or press any key to go back).");
         }
 
-        Console.ReadKey(); Console.Clear();
+        Helpers.ReadClear();
     }
 
     public static void CreateProject()
@@ -81,7 +83,15 @@ internal class Engine
             Console.Write("\nProject Name: ");
             projectName = Console.ReadLine().Trim();
 
-            if (string.IsNullOrEmpty(projectName)) Console.WriteLine("Project name cannot be empty.");
+            if (string.IsNullOrEmpty(projectName))
+            {
+                Helpers.OutputRed("\n\tProject name cannot be empty.\n");
+            }
+            else if (Projects.Any(p => p.Name == projectName))
+            {
+                Helpers.OutputRed($"\n\tA project with the name '{projectName}' already exists. Please choose a different name.\n ");
+                projectName = null;
+            }
 
         } while (string.IsNullOrEmpty(projectName));
 
@@ -92,7 +102,10 @@ internal class Engine
             Console.Write("\nProject Description: ");
             projectDescription = Console.ReadLine().Trim();
 
-            if (string.IsNullOrEmpty(projectDescription)) Console.WriteLine("Project description cannot be empty.");
+            if (string.IsNullOrEmpty(projectDescription))
+            {
+                Helpers.OutputRed("\n\tProject description cannot be empty.\n");
+            }
 
         } while (string.IsNullOrEmpty(projectDescription));
 
@@ -102,16 +115,20 @@ internal class Engine
         Project project = new(projectName, projectDescription, objects, ID);
         Projects.Add(project);
 
-        Helpers.OutputGreen("\n  Project added");
-        Console.ReadKey(); Console.Clear();
+        Helpers.OutputGreen("\n  Project: ");
+        Helpers.OutputYellow($"'{project.Name}'");
+        Helpers.OutputGreen(" has been created.");
+
+        Helpers.ReadClear();
     }
+
 
     public static void DeleteProject()
     {
         if (Projects.Count == 0) 
-        { 
-            Console.WriteLine("\nNo projects to delete.");
-            Console.ReadKey(); Console.Clear();
+        {
+            Helpers.OutputYellow("\nNo projects to delete.");
+            Helpers.ReadClear();
             return; 
         }
 
@@ -127,14 +144,16 @@ internal class Engine
             if (projectToDelete != null)
             {
                 Projects.Remove(projectToDelete);
-                Console.WriteLine($"\n  Project '{input}' has been deleted.");
+                Helpers.OutputGreen("\n  Project: ");
+                Helpers.OutputYellow($"'{input}'");
+                Helpers.OutputGreen(" has been deleted.");
             }
             else
             {
-                Console.WriteLine($"\n  Project '{input}' not found. Please enter a valid project name.");
+                Helpers.OutputRed($"\n  Project '{input}' not found. Please enter a valid project name.");
             }
 
-            Console.ReadKey(); Console.Clear();
+            Helpers.ReadClear();
             break;
         }
     }
@@ -145,7 +164,6 @@ internal class Engine
         if (ActiveProject.Objects.Count == 0) 
         {
             Console.WriteLine("\nThis project currently has no objects.\nTry adding a player object to the space with \'add\'.\n\nPress enter.");
-            Console.ReadKey(); Console.Clear();
             return;
         }
 
@@ -153,10 +171,10 @@ internal class Engine
 
         foreach (var obj in ActiveProject.Objects)
         {
-            Console.WriteLine($"\n  Type: {obj.GetType().Name}");
+            Helpers.OutputYellow($"\n  Type: {obj.GetType().Name}\n");
 
-            if (obj is Player playerObj) Console.WriteLine($"  Name: {playerObj.Name}\n");
-            else if (obj is Block blockObj) Console.WriteLine($"  Name: {blockObj.Name}\n");
+            if (obj is Player playerObj) Helpers.OutputYellow($"  Name: {playerObj.Name}\n");
+            else if (obj is Block blockObj) Helpers.OutputYellow($"  Name: {blockObj.Name}\n");
         }
     }
 
@@ -167,7 +185,8 @@ internal class Engine
             Console.WriteLine("Commands:\n\n\'add\' - to add an object into the space\n" +
                 "\'del\' - To remove an object from the space\n" +
                 "\'play\' - To test the game space\n" +
-                "\'load\' - To display all current space objects");
+                "\'load\' - To display all current space objects" +
+                "\n\n\'return\' - Return to launcher");
 
             string input = Console.ReadLine().ToLower().Trim();
 
@@ -187,12 +206,16 @@ internal class Engine
 
                 case "load":
                     ListObjects();
-                    Console.ReadKey(); Console.Clear();
+                    Helpers.ReadClear();
                     break;
 
+                case "return":
+                    Helpers.OutputYellow("\nReturning to Launcher.");
+                    return;
+
                 default:
-                    Console.WriteLine("Not a valid command.");
-                    Console.ReadKey(); Console.Clear();
+                    Helpers.OutputRed("\n\tNot a valid command.");
+                    Helpers.ReadClear();
                     break;
             }
 
@@ -221,8 +244,8 @@ internal class Engine
 
                 if (nameTaken)
                 {
-                    Console.WriteLine($"\nThe name '{objectName}' is already taken, choose a different object name.");
-                    Console.ReadKey(); Console.Clear();
+                    Helpers.OutputRed($"\n\tThe name '{objectName}' is already taken, choose a different object name.");
+                    Helpers.ReadClear();
                     return;
                 }
 
@@ -244,16 +267,14 @@ internal class Engine
                     break;
 
                 default:
-                    Console.WriteLine("\nNot a valid object type");
-                    Console.ReadKey(); Console.Clear();
+                    Helpers.OutputRed("\n\tNot a valid object type");
+                    Helpers.ReadClear();
                     return;
             }
 
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine($"\n\tAdded object: {objectName}");
-            Console.ResetColor();
-
-            Console.ReadKey(); Console.Clear();
+            Helpers.OutputGreen("\n\tAdded object: ");
+            Helpers.OutputYellow($"'{objectName}'");
+            Helpers.ReadClear();
             return;
         }
     }
@@ -265,7 +286,7 @@ internal class Engine
         {
             if (ActiveProject.Objects.Count == 0)
             {
-                Console.WriteLine("\nNo objects available to delete.");
+                Helpers.OutputYellow("\nNo objects available to delete.");
                 return;
             }
 
@@ -280,7 +301,7 @@ internal class Engine
                 if (obj.Name == input)
                 {
                     ActiveProject.Objects.Remove(obj);
-                    Console.WriteLine($"\n{obj.Name} deleted successfully.");
+                    Helpers.OutputGreen($"\n{obj.Name} deleted successfully.");
                     found = true;
                     break;
                 }
@@ -288,11 +309,11 @@ internal class Engine
 
             if (!found)
             {
-                Console.WriteLine($"\nObject with name '{input}' not found. Try again.");
-                Console.ReadKey(); Console.Clear();
+                Helpers.OutputRed($"\n\tObject with name '{input}' not found. Try again.");
+                Helpers.ReadClear();
                 return;
             }
-            Console.ReadKey(); Console.Clear();
+            Helpers.ReadClear();
             return;
         }
     }
@@ -301,8 +322,8 @@ internal class Engine
     {
         if (Projects.Count == 0)
         {
-            Console.WriteLine("\nNo projects to display.");
-            Console.ReadKey(); Console.Clear();
+            Helpers.OutputYellow("\nNo projects to display.");
+            Helpers.ReadClear();
             return;
         }
 
@@ -310,7 +331,7 @@ internal class Engine
 
         foreach (var project in Projects)
         {
-            Console.WriteLine($"\n{projectIndex} | {project.ID}\n  {project.Name}\n  {project.Description}");
+            Helpers.OutputYellow($"\n{projectIndex} | {project.ID}\n  {project.Name}\n  {project.Description}");
             projectIndex++;
         }
     }
