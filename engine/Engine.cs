@@ -239,6 +239,12 @@ internal class Engine
                 Console.WriteLine("\nEnter a name for your object");
                 objectName = Console.ReadLine();
 
+                Console.WriteLine("\nEnter starting X coordinate for object");
+                startingPlayerX = Convert.ToInt16(Console.ReadLine()); // validate
+
+                Console.WriteLine("\nEnter starting Y coordinate for object"); 
+                startingPlayerY = Convert.ToInt16(Console.ReadLine()); // validate
+
                 nameTaken = ActiveProject.Objects.Any(obj => obj.Name == objectName);
 
                 if (nameTaken)
@@ -266,7 +272,7 @@ internal class Engine
                     break;
 
                 case "2":
-                    Block block = new(0, 0, objectName);
+                    Block block = new(startingPlayerX, startingPlayerY, objectName);
                     ActiveProject.Objects.Add(block);
                     break;
 
@@ -400,6 +406,7 @@ internal class Engine
     private static void MovePlayer(int deltaX, int deltaY)
     {
         Player player = ActiveProject.Objects.OfType<Player>().FirstOrDefault();
+
         if (player != null)
         {
             int newX = player.X + deltaX;
@@ -407,11 +414,18 @@ internal class Engine
 
             if (newX >= 0 && newX < Console.WindowWidth && newY >= 0 && newY < Console.WindowHeight)
             {
-                player.X = newX;
-                player.Y = newY;
+                bool tileBlocked = ActiveProject.Objects.OfType<Block>().Any(block =>
+                    block.X == newX && block.Y == newY);
+
+                if (!tileBlocked)
+                {
+                    player.X = newX;
+                    player.Y = newY;
+                }
             }
         }
     }
+
 
     private static void ResetPlayerPosition()
     {
