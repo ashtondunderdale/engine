@@ -8,6 +8,9 @@ internal class Engine
     public static List<Project> Projects = new();
     public static Project ActiveProject;
 
+    private static int startingPlayerX;
+    private static int startingPlayerY;
+
     public static void Launcher()
     {
         Console.WriteLine("Loaded Launcher.\n");
@@ -51,7 +54,7 @@ internal class Engine
 
         foreach (var project in Projects)
         {
-            Console.WriteLine($"\n{projectIndex} | {project.ID}\n  {project.Name}\n  {project.Description}");
+            Helpers.OutputYellow($"\n{projectIndex} | {project.ID}\n  {project.Name}\n  {project.Description}\n\n");
             projectIndex++;
         }
 
@@ -64,7 +67,7 @@ internal class Engine
             ActiveProject = Projects[input - 1];
             Console.Clear();
             Helpers.OutputYellow("Loaded Project.\n\n");
-            RunSpace();
+            EditSpace();
         }
         else
         {
@@ -136,7 +139,7 @@ internal class Engine
         {
             ListProjects();
 
-            Console.WriteLine("\nEnter the name of the project to delete (or press any key to go back).");
+            Console.WriteLine("\n\nEnter the name of the project to delete (or press any key to go back).");
             string input = Console.ReadLine();
 
             Project projectToDelete = Projects.FirstOrDefault(p => p.Name == input);
@@ -178,7 +181,7 @@ internal class Engine
         }
     }
 
-    public static void RunSpace()
+    public static void EditSpace()
     {
         while (true)
         {
@@ -201,7 +204,7 @@ internal class Engine
                     break;
 
                 case "play":
-
+                    RunSpace();
                     break;
 
                 case "load":
@@ -218,10 +221,6 @@ internal class Engine
                     Helpers.ReadClear();
                     break;
             }
-
-            // add objects
-            // remove objects, via list index of object + 1
-            // pl, play game
         }
     }
 
@@ -340,8 +339,117 @@ internal class Engine
 
         foreach (var project in Projects)
         {
-            Helpers.OutputYellow($"\n{projectIndex} | {project.ID}\n  {project.Name}\n  {project.Description}");
+            Helpers.OutputYellow($"\n{projectIndex} | {project.ID}\n  {project.Name}\n  {project.Description}\n\n");
             projectIndex++;
         }
+    }
+
+    public static void RunSpace()
+    {
+        if (!ActiveProject.ContainsPlayerObject)
+        {
+            Helpers.OutputRed("\n\tNo player object in the space. Add a player object before running the space.");
+            Helpers.ReadClear();
+            return;
+        }
+
+        Player player = ActiveProject.Objects.OfType<Player>().FirstOrDefault();
+
+        if (player != null)
+        {
+            startingPlayerX = player.X;
+            startingPlayerY = player.Y;
+        }
+
+        while (true)
+        {
+            Console.Clear();
+            DisplaySpace();
+
+            ConsoleKeyInfo keyInfo = Console.ReadKey();
+
+            switch (keyInfo.Key)
+            {
+                case ConsoleKey.UpArrow:
+                    MovePlayer(0, -1);
+                    break;
+
+                case ConsoleKey.DownArrow:
+                    MovePlayer(0, 1);
+                    break;
+
+                case ConsoleKey.LeftArrow:
+                    MovePlayer(-1, 0);
+                    break;
+
+                case ConsoleKey.RightArrow:
+                    MovePlayer(1, 0);
+                    break;
+
+                case ConsoleKey.Escape:
+                    Console.Clear(); Console.SetCursorPosition(0, 0); Console.Write("C");
+                    ResetPlayerPosition();
+                    return;
+
+                default:
+                    break;
+            }
+        }
+    }
+
+    private static void MovePlayer(int deltaX, int deltaY)
+    {
+        Player player = ActiveProject.Objects.OfType<Player>().FirstOrDefault();
+        if (player != null)
+        {
+            int newX = player.X + deltaX;
+            int newY = player.Y + deltaY;
+
+            if (newX >= 0 && newX < Console.WindowWidth && newY >= 0 && newY < Console.WindowHeight)
+            {
+                player.X = newX;
+                player.Y = newY;
+            }
+        }
+    }
+
+    private static void ResetPlayerPosition()
+    {
+        Player player = ActiveProject.Objects.OfType<Player>().FirstOrDefault();
+
+        if (player is not null)
+        {
+            player.X = startingPlayerX;
+            player.Y = startingPlayerY;
+        }
+    }
+
+    private static void DisplaySpace()
+    {
+        Console.SetCursorPosition(0, 0);
+
+        foreach (var obj in ActiveProject.Objects)
+        {
+            if (obj is Player playerObj)
+            {
+                Console.SetCursorPosition(playerObj.X, playerObj.Y);
+                Console.Write("P");
+            }
+            else if (obj is Block blockObj)
+            {
+                Console.SetCursorPosition(blockObj.X, blockObj.Y);
+                Console.Write("-");
+            }
+        }
+    }
+
+
+    public static void AddSampleProjectAndObject()
+    {
+        List<GameObject> objects = new();
+        Player testPlayer = new(0, 0, "TestPlayer");
+        objects.Add(testPlayer);
+        Project sampleProject = new("Test", "Test Description", objects, "TESTID", true);
+        Projects.Add(sampleProject);
     }
 }
