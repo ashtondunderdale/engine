@@ -202,39 +202,53 @@ internal class Engine
         }
     }
 
-    public static void AddObject() 
+    public static void AddObject()
     {
-        string objectName = "";
-
-        while (true) 
+        while (true)
         {
             Console.WriteLine("\nSelect object type to add.\n\n1. Player\n2. Block");
             string input = Console.ReadLine();
 
-            switch (input) 
+            string objectName = "";
+            bool nameTaken = false;
+
+            do
+            {
+                Console.WriteLine("\nEnter a name for your object");
+                objectName = Console.ReadLine();
+
+                nameTaken = ActiveProject.Objects.Any(obj => obj.Name == objectName);
+
+                if (nameTaken)
+                {
+                    Console.WriteLine($"\nThe name '{objectName}' is already taken, choose a different object name.");
+                    Console.ReadKey(); Console.Clear();
+                    return;
+                }
+
+            } while (nameTaken);
+
+            switch (input)
             {
                 case "1":
-                    Console.WriteLine("\nEnter a name for your object");
-                    objectName = Console.ReadLine();
                     Player player = new(0, 0, objectName);
                     ActiveProject.Objects.Add(player);
                     break;
 
                 case "2":
-                    Console.WriteLine("\nEnter a name for your object");
-                    objectName = Console.ReadLine();
                     Block block = new(0, 0, objectName);
                     ActiveProject.Objects.Add(block);
                     break;
 
                 case "3":
                     break;
-                    
+
                 default:
                     Console.WriteLine("\nNot a valid object type");
                     Console.ReadKey(); Console.Clear();
                     return;
             }
+
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine($"\n\tAdded object: {objectName}");
             Console.ResetColor();
@@ -243,6 +257,7 @@ internal class Engine
             return;
         }
     }
+
 
     public static void DeleteObject()
     {
@@ -265,7 +280,7 @@ internal class Engine
                 if (obj.Name == input)
                 {
                     ActiveProject.Objects.Remove(obj);
-                    Console.WriteLine($"{obj.Name} deleted successfully.");
+                    Console.WriteLine($"\n{obj.Name} deleted successfully.");
                     found = true;
                     break;
                 }
@@ -277,6 +292,8 @@ internal class Engine
                 Console.ReadKey(); Console.Clear();
                 return;
             }
+            Console.ReadKey(); Console.Clear();
+            return;
         }
     }
 
