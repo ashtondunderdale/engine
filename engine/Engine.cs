@@ -1,5 +1,6 @@
 ﻿using Engine;
 using System.Collections.Generic;
+using System.Security.AccessControl;
 
 namespace engine;
 
@@ -8,8 +9,8 @@ internal class Engine
     public static List<Project> Projects = new();
     public static Project ActiveProject;
 
-    private static int startingPlayerX;
-    private static int startingPlayerY;
+    private static int startingObjectX;
+    private static int startingObjectY;
 
     public static void Launcher()
     {
@@ -178,6 +179,7 @@ internal class Engine
 
             if (obj is Player playerObj) Helpers.OutputYellow($"  Name: {playerObj.Name}\n");
             else if (obj is Block blockObj) Helpers.OutputYellow($"  Name: {blockObj.Name}\n");
+            else if (obj is Chaser chaserObj) Helpers.OutputYellow($"  Name: {chaserObj.Name}\n");
         }
     }
 
@@ -224,41 +226,39 @@ internal class Engine
         }
     }
 
-    public static void AddObject()
+public static void AddObject()
+{
+    while (true)
     {
-        while (true)
+        Console.WriteLine("\nEnter a command to add an object (e.g., 'player myPlayer 0 0'):");
+        string command = Console.ReadLine();
+
+        try
         {
-            Console.WriteLine("\nSelect object type to add.\n\n1. Player\n2. Block");
-            string input = Console.ReadLine();
+            string[] parts = command.Split(' ');
 
-            string objectName = "";
-            bool nameTaken = false;
-
-            do
+            if (parts.Length < 4)
             {
-                Console.WriteLine("\nEnter a name for your object");
-                objectName = Console.ReadLine();
+                Helpers.OutputRed("\n\tInvalid command. Please provide all required parameters.");
+                Helpers.ReadClear();
+                return;
+            }
 
-                Console.WriteLine("\nEnter starting X coordinate for object");
-                startingPlayerX = Convert.ToInt16(Console.ReadLine()); // validate
+            string objectType = parts[0];
+            string objectName = parts[1];
+            int startingX = Convert.ToInt32(parts[2]);
+            int startingY = Convert.ToInt32(parts[3]);
 
-                Console.WriteLine("\nEnter starting Y coordinate for object"); 
-                startingPlayerY = Convert.ToInt16(Console.ReadLine()); // validate
-
-                nameTaken = ActiveProject.Objects.Any(obj => obj.Name == objectName);
-
-                if (nameTaken)
-                {
-                    Helpers.OutputRed($"\n\tThe name '{objectName}' is already taken, choose a different object name.");
-                    Helpers.ReadClear();
-                    return;
-                }
-
-            } while (nameTaken);
-
-            switch (input)
+            if (ActiveProject.Objects.Any(obj => obj.Name == objectName))
             {
-                case "1":
+                Helpers.OutputRed($"\n\tThe name '{objectName}' is already taken, choose a different object name.");
+                Helpers.ReadClear();
+                return;
+            }
+
+            switch (objectType.ToLower())
+            {
+                case "player":
                     if (ActiveProject.ContainsPlayerObject)
                     {
                         Helpers.OutputRed("\n\tYou can only add one player object.");
@@ -266,17 +266,18 @@ internal class Engine
                         return;
                     }
 
-                    Player player = new(0, 0, objectName);
+                    Player player = new(startingX, startingY, objectName);
                     ActiveProject.Objects.Add(player);
                     ActiveProject.ContainsPlayerObject = true;
                     break;
 
-                case "2":
-                    Block block = new(startingPlayerX, startingPlayerY, objectName);
-                    ActiveProject.Objects.Add(block);
+                case "block":
+                    AddBlocks();
                     break;
 
-                case "3":
+                case "chaser":
+                    Chaser chaser = new(startingX, startingY, objectName);
+                    ActiveProject.Objects.Add(chaser);
                     break;
 
                 default:
@@ -290,8 +291,14 @@ internal class Engine
             Helpers.ReadClear();
             return;
         }
+        catch (Exception ex)
+        {
+            Helpers.OutputRed($"\n\tError: {ex.Message}");
+            Helpers.ReadClear();
+            return;
+        }
     }
-
+}
 
 
     public static void DeleteObject()
@@ -360,11 +367,12 @@ internal class Engine
         }
 
         Player player = ActiveProject.Objects.OfType<Player>().FirstOrDefault();
+        Chaser chaser = ActiveProject.Objects.OfType<Chaser>().FirstOrDefault();
 
-        if (player != null)
+        if (player != null && chaser != null)
         {
-            startingPlayerX = player.X;
-            startingPlayerY = player.Y;
+            startingObjectX = player.X;
+            startingObjectY = player.Y;
         }
 
         while (true)
@@ -400,6 +408,17 @@ internal class Engine
                 default:
                     break;
             }
+
+            chaser?.ChasePlayer(player);
+
+            if (player != null && chaser != null && player.X == chaser.X && player.Y == chaser.Y)
+            {
+                Console.Clear();
+                Helpers.OutputRed("\n\tPlayer caught by chaser. Game over!");
+                Helpers.ReadClear();
+                ResetPlayerPosition();
+                return;
+            }
         }
     }
 
@@ -433,8 +452,8 @@ internal class Engine
 
         if (player is not null)
         {
-            player.X = startingPlayerX;
-            player.Y = startingPlayerY;
+            player.X = startingObjectX;
+            player.Y = startingObjectY;
         }
     }
 
@@ -452,7 +471,12 @@ internal class Engine
             else if (obj is Block blockObj)
             {
                 Console.SetCursorPosition(blockObj.X, blockObj.Y);
-                Console.Write("-");
+                Console.Write("=");
+            }
+            else if (obj is Chaser chaserObj) 
+            {
+                Console.SetCursorPosition(chaserObj.X, chaserObj.Y);
+                Console.Write("X");
             }
         }
     }
@@ -461,9 +485,20 @@ internal class Engine
     public static void AddSampleProjectAndObject()
     {
         List<GameObject> objects = new();
+
         Player testPlayer = new(0, 0, "TestPlayer");
         objects.Add(testPlayer);
+
+        Chaser chaser = new(testPlayer.X + 25, testPlayer.Y, "Chaser");
+        objects.Add(chaser);
+
         Project sampleProject = new("Test", "Test Description", objects, "TESTID", true);
         Projects.Add(sampleProject);
     }
+
+    public static void AddBlocks() 
+    {
+
+    }
+
 }
