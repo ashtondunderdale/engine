@@ -231,7 +231,7 @@ public static void AddObject()
 {
     while (true)
     {
-        Console.WriteLine("\nEnter a command to add an object (e.g., 'player myPlayer 0 0')\nYou can also enter \'block\' to place blocks");
+        Console.WriteLine("\nEnter a command to add an object (something like: 'player myPlayer 0 0')\nYou can also enter \'block\' to place blocks");
         string command = Console.ReadLine();
 
         if (command == "block")
@@ -316,6 +316,7 @@ public static void AddObject()
             if (ActiveProject.Objects.Count == 0)
             {
                 Helpers.OutputYellow("\nNo objects available to delete.");
+                Helpers.ReadClear();
                 return;
             }
 
@@ -367,7 +368,7 @@ public static void AddObject()
 
     public static void RunSpace()
     {
-        if (!ActiveProject.ContainsPlayerObject)
+        if (!ActiveProject.Objects.OfType<Player>().Any())
         {
             Helpers.OutputRed("\n\tNo player object in the space. Add a player object before running the space.");
             Helpers.ReadClear();
@@ -428,18 +429,26 @@ public static void AddObject()
                     ResetPlayerPosition();
                     ResetPlayerInventory();
 
-                    foreach (Item item in pickedUpItems) 
+                    foreach (Item item in pickedUpItems)
                     {
                         ActiveProject.Objects.Add(item);
                     }
-                    
+
                     return;
 
                 default:
                     break;
             }
 
-            chaser?.ChasePlayer(player, ActiveProject.Objects);
+            if (ActiveProject.Objects.OfType<Chaser>().Any())
+            {
+                foreach (Chaser chaserObj in ActiveProject.Objects.OfType<Chaser>())
+                {
+                    chaserObj?.ChasePlayer(player, ActiveProject.Objects);
+                }
+            }
+
+
 
             if (player != null && chaser != null && player.X == chaser.X && player.Y == chaser.Y)
             {
@@ -524,8 +533,8 @@ public static void AddObject()
 
         if (player is not null)
         {
-            player.X = startingObjectX;
-            player.Y = startingObjectY;
+            player.X = player.OriginalX;
+            player.Y = player.OriginalY;
         }
     }
 
@@ -591,13 +600,13 @@ public static void AddObject()
             foreach (var block in ActiveProject.Objects.OfType<Block>())
             {
                 Console.SetCursorPosition(block.X, block.Y);
-                Console.Write("B");
+                Console.Write("+");
             }
 
             if (tempBlock != null)
             {
                 Console.SetCursorPosition(tempBlock.X, tempBlock.Y);
-                Console.Write("B");
+                Console.Write("+");
             }
 
             ConsoleKeyInfo keyInfo = Console.ReadKey();
@@ -621,14 +630,10 @@ public static void AddObject()
                     break;
 
                 case ConsoleKey.Enter:
-                    if (tempBlock != null)
-                    {
-                        ActiveProject.Objects.Add(tempBlock);
-                    }
+                    if (tempBlock is null) ActiveProject.Objects.Add(tempBlock);
                     break;
 
-                case ConsoleKey.Escape:
-                    Console.Clear();
+                case ConsoleKey.Escape: Console.Clear();
                     return;
 
                 default:

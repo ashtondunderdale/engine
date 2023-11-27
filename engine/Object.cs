@@ -17,10 +17,13 @@
     internal class Player : GameObject
     {
         public List<Item> Inventory { get; private set; }
-
+        public int OriginalX { get; private set; }
+        public int OriginalY { get; private set; }
         public Player(int x, int y, string name) : base(x, y, name)
         {
             Inventory = new List<Item>();
+            OriginalX = x;
+            OriginalY = y;
         }
     }
 
@@ -32,10 +35,14 @@
     internal class Chaser : GameObject
     {
         private DateTime lastMoveTime;
+        public int OriginalX { get; private set; }
+        public int OriginalY { get; private set; }
 
         public Chaser(int x, int y, string name) : base(x, y, name)
         {
             lastMoveTime = DateTime.Now;
+            OriginalX = x;
+            OriginalY = y;
         }
 
         public void ChasePlayer(Player player, List<GameObject> objects)
