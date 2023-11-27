@@ -384,7 +384,7 @@ public static void AddObject()
         }
 
         bool inInventory = false;
-        List<Item> pickedUpItems = new List<Item>();
+        List<Item> pickedUpItems = new();
 
         while (true)
         {
@@ -404,19 +404,19 @@ public static void AddObject()
             switch (keyInfo.Key)
             {
                 case ConsoleKey.UpArrow:
-                    if (!inInventory) MovePlayer(0, -1);
+                    if (!inInventory) MovePlayer(0, -1, pickedUpItems);
                     break;
 
                 case ConsoleKey.DownArrow:
-                    if (!inInventory) MovePlayer(0, 1);
+                    if (!inInventory) MovePlayer(0, 1, pickedUpItems);
                     break;
 
                 case ConsoleKey.LeftArrow:
-                    if (!inInventory) MovePlayer(-1, 0);
+                    if (!inInventory) MovePlayer(-1, 0, pickedUpItems);
                     break;
 
                 case ConsoleKey.RightArrow:
-                    if (!inInventory) MovePlayer(1, 0);
+                    if (!inInventory) MovePlayer(1, 0, pickedUpItems);
                     break;
 
                 case ConsoleKey.I:
@@ -427,6 +427,12 @@ public static void AddObject()
                     Console.Clear();
                     ResetPlayerPosition();
                     ResetPlayerInventory();
+
+                    foreach (Item item in pickedUpItems) 
+                    {
+                        ActiveProject.Objects.Add(item);
+                    }
+                    
                     return;
 
                 default:
@@ -478,7 +484,7 @@ public static void AddObject()
 
 
 
-    private static void MovePlayer(int deltaX, int deltaY)
+    private static void MovePlayer(int deltaX, int deltaY, List<Item> pickedUpItems)
     {
         Player player = ActiveProject.Objects.OfType<Player>().FirstOrDefault();
 
@@ -503,8 +509,8 @@ public static void AddObject()
                     if (tileItem != null)
                     {
                         player.Inventory.Add(tileItem);
-
                         ActiveProject.Objects.Remove(tileItem);
+                        pickedUpItems.Add(tileItem);
                     }
                 }
             }
