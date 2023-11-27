@@ -9,9 +9,6 @@ internal class Engine
     public static List<Project> Projects = new();
     public static Project ActiveProject;
 
-    private static int startingObjectX;
-    private static int startingObjectY;
-
     public static void Launcher()
     {
         Console.WriteLine("Loaded Launcher.\n");
@@ -181,6 +178,8 @@ internal class Engine
             else if (obj is Block blockObj) Helpers.OutputYellow($"  Name: {blockObj.Name}\n");
             else if (obj is Chaser chaserObj) Helpers.OutputYellow($"  Name: {chaserObj.Name}\n");
             else if (obj is Item itemObj) Helpers.OutputYellow($"  Name: {itemObj.Name}\n");
+            else if (obj is WinTile winTileObj) Helpers.OutputYellow($"  Name: {winTileObj.Name}\n");
+
         }
     }
 
@@ -227,86 +226,91 @@ internal class Engine
         }
     }
 
-public static void AddObject()
-{
-    while (true)
+    public static void AddObject()
     {
-        Console.WriteLine("\nEnter a command to add an object (something like: 'player myPlayer 0 0')\nYou can also enter \'block\' to place blocks");
-        string command = Console.ReadLine();
-
-        if (command == "block")
+        while (true)
         {
-            AddBlocks();
-            return;
-        }
+            Console.WriteLine("\nEnter a command to add an object (something like: 'player myPlayer 0 0')\nYou can also enter \'block\' to place blocks");
+            string command = Console.ReadLine();
 
-        try
-        {
-            string[] parts = command.Split(' ');
-
-            if (parts.Length < 4)
+            if (command == "block")
             {
-                Helpers.OutputRed("\n\tInvalid command. Please provide all required parameters.");
-                Helpers.ReadClear();
+                AddBlocks();
                 return;
             }
 
-            string objectType = parts[0];
-            string objectName = parts[1];
-            int startingX = Convert.ToInt32(parts[2]);
-            int startingY = Convert.ToInt32(parts[3]);
-
-            if (ActiveProject.Objects.Any(obj => obj.Name == objectName))
+            try
             {
-                Helpers.OutputRed($"\n\tThe name '{objectName}' is already taken, choose a different object name.");
+                string[] parts = command.Split(' ');
+
+                if (parts.Length < 4)
+                {
+                    Helpers.OutputRed("\n\tInvalid command. Please provide all required parameters.");
+                    Helpers.ReadClear();
+                    return;
+                }
+
+                string objectType = parts[0];
+                string objectName = parts[1];
+                int startingX = Convert.ToInt32(parts[2]);
+                int startingY = Convert.ToInt32(parts[3]);
+
+                if (ActiveProject.Objects.Any(obj => obj.Name == objectName))
+                {
+                    Helpers.OutputRed($"\n\tThe name '{objectName}' is already taken, choose a different object name.");
+                    Helpers.ReadClear();
+                    return;
+                }
+
+                switch (objectType.ToLower())
+                {
+                    case "player":
+                        if (ActiveProject.ContainsPlayerObject)
+                        {
+                            Helpers.OutputRed("\n\tYou can only add one player object.");
+                            Helpers.ReadClear();
+                            return;
+                        }
+
+                        Player player = new(startingX, startingY, objectName);
+                        ActiveProject.Objects.Add(player);
+                        ActiveProject.ContainsPlayerObject = true;
+                        break;
+
+                    case "chaser":
+                        Chaser chaser = new(startingX, startingY, objectName);
+                        ActiveProject.Objects.Add(chaser);
+                        break;
+
+                    case "item":
+                        Item item = new(startingX, startingY, objectName);
+                        ActiveProject.Objects.Add(item);
+                        break;
+
+                    case "win":
+                        WinTile winTile = new(startingX, startingY, objectName);
+                        ActiveProject.Objects.Add(winTile);
+                        break;
+
+                    default:
+                    Helpers.OutputRed("\n\tNot a valid object type");
+                    Helpers.ReadClear();
+                    return;
+                }
+
+                Helpers.OutputGreen("\n\tAdded object: ");
+                Helpers.OutputYellow($"'{objectName}'");
                 Helpers.ReadClear();
                 return;
             }
-
-            switch (objectType.ToLower())
+            catch (Exception ex)
             {
-                case "player":
-                    if (ActiveProject.ContainsPlayerObject)
-                    {
-                        Helpers.OutputRed("\n\tYou can only add one player object.");
-                        Helpers.ReadClear();
-                        return;
-                    }
-
-                    Player player = new(startingX, startingY, objectName);
-                    ActiveProject.Objects.Add(player);
-                    ActiveProject.ContainsPlayerObject = true;
-                    break;
-
-                case "chaser":
-                    Chaser chaser = new(startingX, startingY, objectName);
-                    ActiveProject.Objects.Add(chaser);
-                    break;
-
-                case "item":
-                Item item = new(startingX, startingY, objectName);
-                    ActiveProject.Objects.Add(item);
-                    break;
-
-                default:
-                Helpers.OutputRed("\n\tNot a valid object type");
+                Helpers.OutputRed($"\n\tError: {ex.Message}");
                 Helpers.ReadClear();
                 return;
             }
-
-            Helpers.OutputGreen("\n\tAdded object: ");
-            Helpers.OutputYellow($"'{objectName}'");
-            Helpers.ReadClear();
-            return;
-        }
-        catch (Exception ex)
-        {
-            Helpers.OutputRed($"\n\tError: {ex.Message}");
-            Helpers.ReadClear();
-            return;
         }
     }
-}
 
 
     public static void DeleteObject()
@@ -378,12 +382,6 @@ public static void AddObject()
         Player player = ActiveProject.Objects.OfType<Player>().FirstOrDefault();
         Chaser chaser = ActiveProject.Objects.OfType<Chaser>().FirstOrDefault();
 
-        if (player != null && chaser != null)
-        {
-            startingObjectX = player.X;
-            startingObjectY = player.Y;
-        }
-
         bool inInventory = false;
         List<Item> pickedUpItems = new();
 
@@ -426,6 +424,7 @@ public static void AddObject()
 
                 case ConsoleKey.Escape:
                     Console.Clear();
+                    Console.Write("C");
                     ResetPlayerPosition();
                     ResetPlayerInventory();
 
@@ -448,7 +447,14 @@ public static void AddObject()
                 }
             }
 
-
+            if (player != null && chaser != null && player.X == chaser.X && player.Y == chaser.Y)
+            {
+                Console.Clear();
+                Helpers.OutputRed("\n\tPlayer caught by chaser. Game over!");
+                Helpers.ReadClear();
+                ResetPlayerPosition();
+                return;
+            }
 
             if (player != null && chaser != null && player.X == chaser.X && player.Y == chaser.Y)
             {
@@ -467,27 +473,17 @@ public static void AddObject()
 
         Console.Clear();
 
-        if (inInventory)
-        {
-            DisplayInventory(player);
-        }
-        else
-        {
-            DisplaySpace();
-        }
+        if (inInventory)  DisplayInventory(player);
+        else DisplaySpace();
     }
 
     private static void DisplayInventory(Player player)
     {
         Console.WriteLine("Inventory:");
 
-        foreach (var item in player.Inventory)
-        {
-            Console.WriteLine($"- {item.Name}");
-        }
+        foreach (var item in player.Inventory) Console.WriteLine($"- {item.Name}");
 
         Console.WriteLine("\nPress 'i' again to close inventory.");
-
         Console.SetCursorPosition(player.X, player.Y);
     }
 
@@ -512,8 +508,22 @@ public static void AddObject()
                     player.X = newX;
                     player.Y = newY;
 
-                Item tileItem = ActiveProject.Objects.OfType<Item>().FirstOrDefault(item =>
-                    item.X == newX && item.Y == newY);
+                    WinTile winTile = ActiveProject.Objects.OfType<WinTile>().FirstOrDefault(winTile =>
+                        winTile.X == newX && winTile.Y == newY);
+
+                    if (winTile is WinTile)
+                    {
+                        Console.Clear();
+                        Helpers.OutputGreen("\n\tCongratulations! You won!");
+                        Helpers.ReadClear();
+                        Console.Clear();
+                        ResetPlayerPosition();
+
+                        EditSpace();
+                    }
+
+                    Item tileItem = ActiveProject.Objects.OfType<Item>().FirstOrDefault(item =>
+                        item.X == newX && item.Y == newY);
 
                     if (tileItem != null)
                     {
@@ -525,6 +535,7 @@ public static void AddObject()
             }
         }
     }
+
 
 
     private static void ResetPlayerPosition()
@@ -564,12 +575,17 @@ public static void AddObject()
             else if (obj is Chaser chaserObj)
             {
                 Console.SetCursorPosition(chaserObj.X, chaserObj.Y); // validate this when adding chaser
-                Console.Write("X");
+                Console.Write("0");
             }
             else if (obj is Item itemObj) 
             {
                 Console.SetCursorPosition(itemObj.X, itemObj.Y);
                 Console.Write("i");
+            }
+            else if (obj is WinTile winTileObj)
+            {
+                Console.SetCursorPosition(winTileObj.X, winTileObj.Y);
+                Console.Write("X");
             }
         }
     }
