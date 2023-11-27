@@ -180,6 +180,7 @@ internal class Engine
             if (obj is Player playerObj) Helpers.OutputYellow($"  Name: {playerObj.Name}\n");
             else if (obj is Block blockObj) Helpers.OutputYellow($"  Name: {blockObj.Name}\n");
             else if (obj is Chaser chaserObj) Helpers.OutputYellow($"  Name: {chaserObj.Name}\n");
+            else if (obj is Item itemObj) Helpers.OutputYellow($"  Name: {itemObj.Name}\n");
         }
     }
 
@@ -282,10 +283,15 @@ public static void AddObject()
                     ActiveProject.Objects.Add(chaser);
                     break;
 
+                case "item":
+                Item item = new(startingX, startingY, objectName);
+                    ActiveProject.Objects.Add(item);
+                    break;
+
                 default:
-                    Helpers.OutputRed("\n\tNot a valid object type");
-                    Helpers.ReadClear();
-                    return;
+                Helpers.OutputRed("\n\tNot a valid object type");
+                Helpers.ReadClear();
+                return;
             }
 
             Helpers.OutputGreen("\n\tAdded object: ");
@@ -377,33 +383,47 @@ public static void AddObject()
             startingObjectY = player.Y;
         }
 
+        bool inInventory = false;
+
         while (true)
         {
             Console.Clear();
-            DisplaySpace();
+
+            if (inInventory)
+            {
+                DisplayInventory(player);
+            }
+            else
+            {
+                DisplaySpace();
+            }
 
             ConsoleKeyInfo keyInfo = Console.ReadKey();
 
             switch (keyInfo.Key)
             {
                 case ConsoleKey.UpArrow:
-                    MovePlayer(0, -1);
+                    if (!inInventory) MovePlayer(0, -1);
                     break;
 
                 case ConsoleKey.DownArrow:
-                    MovePlayer(0, 1);
+                    if (!inInventory) MovePlayer(0, 1);
                     break;
 
                 case ConsoleKey.LeftArrow:
-                    MovePlayer(-1, 0);
+                    if (!inInventory) MovePlayer(-1, 0);
                     break;
 
                 case ConsoleKey.RightArrow:
-                    MovePlayer(1, 0);
+                    if (!inInventory) MovePlayer(1, 0);
+                    break;
+
+                case ConsoleKey.I:
+                    ToggleInventory(player, ref inInventory);
                     break;
 
                 case ConsoleKey.Escape:
-                    Console.Clear(); Console.SetCursorPosition(0, 0); Console.Write("C");
+                    Console.Clear();
                     ResetPlayerPosition();
                     return;
 
@@ -424,6 +444,38 @@ public static void AddObject()
         }
     }
 
+    private static void ToggleInventory(Player player, ref bool inInventory)
+    {
+        inInventory = !inInventory;
+
+        Console.Clear();
+
+        if (inInventory)
+        {
+            DisplayInventory(player);
+        }
+        else
+        {
+            DisplaySpace();
+        }
+    }
+
+    private static void DisplayInventory(Player player)
+    {
+        Console.WriteLine("Inventory:");
+
+        foreach (var item in player.Inventory)
+        {
+            Console.WriteLine($"- {item.Name}");
+        }
+
+        Console.WriteLine("\nPress 'i' again to close inventory.");
+
+        Console.SetCursorPosition(player.X, player.Y);
+    }
+
+
+
     private static void MovePlayer(int deltaX, int deltaY)
     {
         Player player = ActiveProject.Objects.OfType<Player>().FirstOrDefault();
@@ -442,6 +494,16 @@ public static void AddObject()
                 {
                     player.X = newX;
                     player.Y = newY;
+
+                Item tileItem = ActiveProject.Objects.OfType<Item>().FirstOrDefault(item =>
+                    item.X == newX && item.Y == newY);
+
+                    if (tileItem != null)
+                    {
+                        player.Inventory.Add(tileItem);
+
+                        ActiveProject.Objects.Remove(tileItem);
+                    }
                 }
             }
         }
@@ -473,12 +535,17 @@ public static void AddObject()
             else if (obj is Block blockObj)
             {
                 Console.SetCursorPosition(blockObj.X, blockObj.Y);
-                Console.Write("=");
+                Console.Write("+");
             }
-            else if (obj is Chaser chaserObj) 
+            else if (obj is Chaser chaserObj)
             {
-                Console.SetCursorPosition(chaserObj.X, chaserObj.Y);
+                Console.SetCursorPosition(chaserObj.X, chaserObj.Y); // validate this when adding chaser
                 Console.Write("X");
+            }
+            else if (obj is Item itemObj) 
+            {
+                Console.SetCursorPosition(itemObj.X, itemObj.Y);
+                Console.Write("i");
             }
         }
     }
@@ -554,5 +621,4 @@ public static void AddObject()
             }
         }
     }
-
 }

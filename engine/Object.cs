@@ -16,7 +16,12 @@
 
     internal class Player : GameObject
     {
-        public Player(int x, int y, string name) : base(x, y, name) { }
+        public List<Item> Inventory { get; private set; }
+
+        public Player(int x, int y, string name) : base(x, y, name)
+        {
+            Inventory = new List<Item>();
+        }
     }
 
     internal class Block : GameObject
@@ -55,7 +60,7 @@
             }
         }
 
-        private bool IsValidMove(int x, int y, List<GameObject> objects)
+        private static bool IsValidMove(int x, int y, List<GameObject> objects)
         {
             if (x < 0 || x >= Console.WindowWidth || y < 0 || y >= Console.WindowHeight)
             {
@@ -72,6 +77,11 @@
 
             return true;
         }
+    }
+
+    internal class Item : GameObject
+    {
+        public Item(int x, int y, string name) : base(x, y, name) { }
     }
 
 }
