@@ -2,9 +2,5 @@
 
 internal class Program
 {
-    static void Main()
-    {
-        //Engine.AddSampleProjectAndObject();
-        Engine.Launcher();
-    }
+    static void Main() => Engine.Launcher();
 }

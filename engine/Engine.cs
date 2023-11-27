@@ -1,6 +1,4 @@
 ﻿using Engine;
-using System.Collections.Generic;
-using System.Security.AccessControl;
 
 namespace engine;
 
@@ -11,12 +9,14 @@ internal class Engine
 
     public static void Launcher()
     {
+        AddSampleProjectAndObject(); // for dev testing
+
         Console.WriteLine("Loaded Launcher.\n");
         Helpers.ReadClear();
 
         while (true)
         {
-            Console.WriteLine("1. Load Projects\n2. Create a new project\n3. Delete a project\n4. Exit");
+            Console.WriteLine("1. Load Projects\n2. Create a new project\n3. Delete a project\n4. Help\n5. Exit");
             string? input = Console.ReadLine();
 
             switch (input)
@@ -27,11 +27,10 @@ internal class Engine
 
                 case "3": DeleteProject(); break;
 
-                case "4":
-                    if (Helpers.Exit()) 
-                    { Console.Clear(); 
-                        continue; 
-                    }
+                case "4": GameInfo.Help(); break;
+
+                case "5":
+                    if (Helpers.Exit()) continue; 
                     else return;
 
                 default: Console.Clear(); break;
@@ -384,8 +383,9 @@ internal class Engine
 
         bool inInventory = false;
         List<Item> pickedUpItems = new();
+        bool gameSpaceActive = true; // for when the user goes on a win tile
 
-        while (true)
+        while (gameSpaceActive)
         {
             Console.Clear();
 
@@ -403,19 +403,19 @@ internal class Engine
             switch (keyInfo.Key)
             {
                 case ConsoleKey.UpArrow:
-                    if (!inInventory) MovePlayer(0, -1, pickedUpItems);
+                    if (!inInventory) MovePlayer(0, -1, pickedUpItems, ref gameSpaceActive);
                     break;
 
                 case ConsoleKey.DownArrow:
-                    if (!inInventory) MovePlayer(0, 1, pickedUpItems);
+                    if (!inInventory) MovePlayer(0, 1, pickedUpItems, ref gameSpaceActive);
                     break;
 
                 case ConsoleKey.LeftArrow:
-                    if (!inInventory) MovePlayer(-1, 0, pickedUpItems);
+                    if (!inInventory) MovePlayer(-1, 0, pickedUpItems, ref gameSpaceActive);
                     break;
 
                 case ConsoleKey.RightArrow:
-                    if (!inInventory) MovePlayer(1, 0, pickedUpItems);
+                    if (!inInventory) MovePlayer(1, 0, pickedUpItems, ref gameSpaceActive);
                     break;
 
                 case ConsoleKey.I:
@@ -426,13 +426,7 @@ internal class Engine
                     Console.Clear();
                     Console.Write("C");
                     ResetPlayerPosition();
-                    ResetPlayerInventory();
-
-                    foreach (Item item in pickedUpItems)
-                    {
-                        ActiveProject.Objects.Add(item);
-                    }
-
+                    ResetPlayerInventory(pickedUpItems);
                     return;
 
                 default:
@@ -453,19 +447,15 @@ internal class Engine
                 Helpers.OutputRed("\n\tPlayer caught by chaser. Game over!");
                 Helpers.ReadClear();
                 ResetPlayerPosition();
-                return;
-            }
-
-            if (player != null && chaser != null && player.X == chaser.X && player.Y == chaser.Y)
-            {
-                Console.Clear();
-                Helpers.OutputRed("\n\tPlayer caught by chaser. Game over!");
-                Helpers.ReadClear();
-                ResetPlayerPosition();
+                ResetPlayerInventory(pickedUpItems);
                 return;
             }
         }
+
+        ResetPlayerPosition();
+        ResetPlayerInventory(pickedUpItems);
     }
+
 
     private static void ToggleInventory(Player player, ref bool inInventory)
     {
@@ -489,7 +479,7 @@ internal class Engine
 
 
 
-    private static void MovePlayer(int deltaX, int deltaY, List<Item> pickedUpItems)
+    private static void MovePlayer(int deltaX, int deltaY, List<Item> pickedUpItems, ref bool gameSpaceActive)
     {
         Player player = ActiveProject.Objects.OfType<Player>().FirstOrDefault();
 
@@ -516,10 +506,10 @@ internal class Engine
                         Console.Clear();
                         Helpers.OutputGreen("\n\tCongratulations! You won!");
                         Helpers.ReadClear();
-                        Console.Clear();
                         ResetPlayerPosition();
-
-                        EditSpace();
+                        ResetPlayerInventory(pickedUpItems);
+                        gameSpaceActive = false;
+                        return;
                     }
 
                     Item tileItem = ActiveProject.Objects.OfType<Item>().FirstOrDefault(item =>
@@ -538,68 +528,103 @@ internal class Engine
 
 
 
+
     private static void ResetPlayerPosition()
     {
         Player player = ActiveProject.Objects.OfType<Player>().FirstOrDefault();
+        Chaser chaser = ActiveProject.Objects.OfType<Chaser>().FirstOrDefault();
 
         if (player is not null)
         {
             player.X = player.OriginalX;
             player.Y = player.OriginalY;
         }
+
+        if (chaser is not null)
+        {
+            chaser.X = chaser.OriginalX;
+            chaser.Y = chaser.OriginalY;
+        }
     }
 
-    private static void ResetPlayerInventory() 
+
+    private static void ResetPlayerInventory(List<Item> pickedUpItems) 
     {
         Player player = ActiveProject.Objects.OfType<Player>().FirstOrDefault();
         if (player is not null) player.Inventory.Clear();
-    }
 
+        foreach (Item item in pickedUpItems)
+        {
+            ActiveProject.Objects.Add(item);
+        }
+    }
 
     private static void DisplaySpace()
     {
         Console.SetCursorPosition(0, 0);
 
+        int windowWidth = Console.WindowWidth;
+        int windowHeight = Console.WindowHeight;
+
         foreach (var obj in ActiveProject.Objects)
         {
-            if (obj is Player playerObj)
+            int x = obj.X;
+            int y = obj.Y;
+
+            x = Math.Max(0, Math.Min(x, windowWidth - 1));
+            y = Math.Max(0, Math.Min(y, windowHeight - 1));
+
+            Console.SetCursorPosition(x, y)
+                ;
+            if (obj is Player)
             {
-                Console.SetCursorPosition(playerObj.X, playerObj.Y);
+                Console.ForegroundColor = ConsoleColor.Blue;
                 Console.Write("P");
             }
-            else if (obj is Block blockObj)
+
+            else if (obj is Block)
             {
-                Console.SetCursorPosition(blockObj.X, blockObj.Y);
+                Console.ForegroundColor = ConsoleColor.White;
                 Console.Write("+");
             }
-            else if (obj is Chaser chaserObj)
+
+            else if (obj is Chaser)
             {
-                Console.SetCursorPosition(chaserObj.X, chaserObj.Y); // validate this when adding chaser
+                Console.ForegroundColor = ConsoleColor.Red;
                 Console.Write("0");
             }
-            else if (obj is Item itemObj) 
+
+            else if (obj is Item)
             {
-                Console.SetCursorPosition(itemObj.X, itemObj.Y);
+                Console.ForegroundColor = ConsoleColor.Cyan;
                 Console.Write("i");
             }
-            else if (obj is WinTile winTileObj)
+
+            else if (obj is WinTile)
             {
-                Console.SetCursorPosition(winTileObj.X, winTileObj.Y);
+                Console.ForegroundColor = ConsoleColor.Green;
                 Console.Write("X");
             }
+
+            Console.ResetColor();
         }
     }
-
 
     public static void AddSampleProjectAndObject()
     {
         List<GameObject> objects = new();
 
-        Player testPlayer = new(0, 0, "TestPlayer");
-        objects.Add(testPlayer);
+        Player player = new(0, 0, "player");
+        objects.Add(player);
 
-        Chaser chaser = new(testPlayer.X + 25, testPlayer.Y, "Chaser");
+        Chaser chaser = new(player.X + 25, player.Y, "chaser");
         objects.Add(chaser);
+
+        Item item = new(10, 10, "item");
+        objects.Add(item);
+
+        WinTile winTile = new(10, 12, "item");
+        objects.Add(winTile);
 
         Project sampleProject = new("Test", "Test Description", objects, "TESTID", true);
         Projects.Add(sampleProject);
@@ -646,14 +671,13 @@ internal class Engine
                     break;
 
                 case ConsoleKey.Enter:
-                    if (tempBlock is null) ActiveProject.Objects.Add(tempBlock);
+                    if (tempBlock is not null) ActiveProject.Objects.Add(tempBlock);
                     break;
 
                 case ConsoleKey.Escape: Console.Clear();
                     return;
 
-                default:
-                    break;
+                default: break;
             }
         }
     }
