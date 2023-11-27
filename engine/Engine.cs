@@ -384,6 +384,7 @@ public static void AddObject()
         }
 
         bool inInventory = false;
+        List<Item> pickedUpItems = new List<Item>();
 
         while (true)
         {
@@ -425,6 +426,7 @@ public static void AddObject()
                 case ConsoleKey.Escape:
                     Console.Clear();
                     ResetPlayerPosition();
+                    ResetPlayerInventory();
                     return;
 
                 default:
@@ -520,6 +522,13 @@ public static void AddObject()
             player.Y = startingObjectY;
         }
     }
+
+    private static void ResetPlayerInventory() 
+    {
+        Player player = ActiveProject.Objects.OfType<Player>().FirstOrDefault();
+        if (player is not null) player.Inventory.Clear();
+    }
+
 
     private static void DisplaySpace()
     {

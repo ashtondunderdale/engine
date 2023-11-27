@@ -81,7 +81,13 @@
 
     internal class Item : GameObject
     {
-        public Item(int x, int y, string name) : base(x, y, name) { }
-    }
+        public int OriginalX { get; private set; }
+        public int OriginalY { get; private set; }
 
+        public Item(int x, int y, string name) : base(x, y, name)
+        {
+            OriginalX = x;
+            OriginalY = y;
+        }
+    }
 }
