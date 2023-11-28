@@ -32,23 +32,23 @@ internal class Helpers
         return input;
     }
 
-    public static bool Exit()
+    public static void Exit()
     {
         while (true)
         {
             Console.WriteLine("\nConfirm exit (y / n)");
-            string? input = Console.ReadLine().ToLower();
+            string? input = InputCyan().ToLower();
 
             if (input != "y")
             {
                 OutputYellow("\nReturning to Launcher.");
                 ReadClear();
-                return true;
+                break;
             }
             else if (input != "n")
             {
                 OutputYellow("\nExiting Now.");
-                return false; 
+                Environment.Exit(0);
             }
             else continue;
         }

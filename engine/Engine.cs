@@ -8,17 +8,21 @@ internal class Engine
     public static List<Project> Projects = new();
     public static Project ActiveProject;
 
-    public static void Main() => Launcher();
+    public static void Main() 
+    {
+        Helpers.OutputYellow("Loaded Launcher.\n");
+        Helpers.ReadClear();
+
+        Launcher();
+    }
 
     public static void Launcher()
     {
         //AddSampleProjectAndObject(); // for dev testing
-
-        Helpers.OutputYellow("Loaded Launcher.\n");
-        Helpers.ReadClear();
-
         while (true)
         {
+            Console.Clear();
+
             Helpers.OutputYellow($"Engine Home\n");
             Console.WriteLine($"{ new string('_', 30)}\n");
 
@@ -41,19 +45,23 @@ internal class Engine
 
             switch (input)
             {
-                case "1": LoadProject(); break;
+                case "1": LoadProject(); 
+                    break;
 
-                case "2": CreateProject(); break;
+                case "2": CreateProject(); 
+                    break;
 
-                case "3": DeleteProject(); break;
+                case "3": DeleteProject(); 
+                    break;
 
-                case "4": Help(); break;
+                case "4": Help();
+                    break;
 
-                case "5":
-                    if (Helpers.Exit()) continue; 
-                    else return;
-
-                default: Console.Clear(); break;
+                case "5": Helpers.Exit(); 
+                    break;
+                    
+                default: Console.Clear(); 
+                    break;
             }
         }
     }
@@ -83,7 +91,6 @@ internal class Engine
         {
             ActiveProject = Projects[input - 1];
             Console.Clear();
-            Helpers.OutputYellow("Loaded Project.\n\n");
             EditSpace();
         }
         else
@@ -215,6 +222,8 @@ internal class Engine
     {
         while (true)
         {
+            Console.Clear();
+
             Console.WriteLine("Commands:\n\n" +
                 "cr obj         - Create a new object for the currently active level\n" +
                 "dl obj         - Removes an object from the currently active level\n" +
@@ -280,7 +289,8 @@ internal class Engine
 
                 case "rt":
                     Helpers.OutputYellow("\nReturning to Launcher.");
-                    return;
+                    Launcher();
+                    break;
 
                 default:
                     Helpers.OutputRed("\n\tNot a valid command.");
@@ -294,9 +304,17 @@ internal class Engine
     {
         while (true)
         {
+            if (ActiveProject.Levels.Count == 0)
+            {
+                Helpers.OutputYellow("\nCreate a level to add an object.");
+                Helpers.ReadClear();
+                return;
+            }
+
             if (ActiveProject.ActiveLevel.Name == "None") 
             {
-                Helpers.OutputRed("Create a level to add an object.");
+                Helpers.OutputYellow("\nSelect an active level to add an object.");
+                Helpers.ReadClear();
                 return;
             }
 
@@ -417,8 +435,11 @@ internal class Engine
             string input = Helpers.InputCyan();
 
             bool found = false;
-            foreach (var obj in ActiveProject.ActiveLevel.Objects.ToList())
+            var objectsList = ActiveProject.ActiveLevel.Objects.ToList();
+
+            for (int i = objectsList.Count - 1; i >= 0; i--)
             {
+                var obj = objectsList[i];
                 if (obj.Name == input)
                 {
                     ActiveProject.ActiveLevel.Objects.Remove(obj);
@@ -427,6 +448,7 @@ internal class Engine
                     break;
                 }
             }
+
 
             if (!found)
             {
@@ -444,7 +466,7 @@ internal class Engine
 
         if (ActiveProject.ActiveLevel.Objects.Count == 0) 
         {
-            Helpers.OutputRed("\n\tThis project currently has no objects.");
+            Helpers.OutputYellow("\nThis project currently has no objects.");
             return;
         }
 
@@ -534,7 +556,7 @@ internal class Engine
     {
         if (ActiveProject.Levels.Count == 0) 
         {
-            Helpers.OutputRed("\nThere are no levels to list.");
+            Helpers.OutputYellow("\nThere are no levels to list.");
         }
 
         Console.WriteLine($"\n\nLoading levels for: {ActiveProject.Name}");
@@ -557,7 +579,7 @@ internal class Engine
 
         if (ActiveProject.Levels.Count == 0)
         {
-            Helpers.OutputRed("\nThere are no levels to load in this project.");
+            Helpers.OutputYellow("\nThere are no levels to load in this project.");
             return;
         }
 
@@ -575,7 +597,7 @@ internal class Engine
         }
         else
         {
-            Helpers.OutputRed("\n\tInvalid input. Please enter a valid level number (or press any key to go back).");
+            Helpers.OutputYellow("\n\tEnter a valid level number (or press any key to go back).");
             return;
         }
     }
