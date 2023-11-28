@@ -459,14 +459,17 @@ internal class Engine
                 }
             }
 
-            if (player != null && chaser != null && player.X == chaser.X && player.Y == chaser.Y)
+            foreach (Chaser chaserObj in ActiveProject.Objects.OfType<Chaser>()) 
             {
-                Console.Clear();
-                Helpers.OutputRed("\n\tPlayer caught by chaser. Game over!");
-                Helpers.ReadClear();
-                ResetPlayerPosition();
-                ResetPlayerInventory(pickedUpItems);
-                return;
+                if (player != null && chaserObj != null && player.X == chaserObj.X && player.Y == chaserObj.Y)
+                {
+                    Console.Clear();
+                    Helpers.OutputRed("\n\tPlayer caught by chaser. Game over!");
+                    Helpers.ReadClear();
+                    ResetPlayerPosition();
+                    ResetPlayerInventory(pickedUpItems);
+                    return;
+                }
             }
         }
 
@@ -544,9 +547,6 @@ internal class Engine
         }
     }
 
-
-
-
     private static void ResetPlayerPosition()
     {
         Player player = ActiveProject.Objects.OfType<Player>().FirstOrDefault();
@@ -564,7 +564,6 @@ internal class Engine
             chaser.Y = chaser.OriginalY;
         }
     }
-
 
     private static void ResetPlayerInventory(List<Item> pickedUpItems) 
     {
