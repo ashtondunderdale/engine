@@ -18,6 +18,20 @@ namespace Engine
         }
     }
 
+    internal class Level
+    {
+        public string Name { get; set; }
+        public List<GameObject> Objects;
+        public bool ContainsPlayerObject;
+
+        public Level(string name, List<GameObject> objects, bool containsPlayerObject)
+        {
+            Name = name;
+            Objects = objects;
+            ContainsPlayerObject = containsPlayerObject;
+        }
+    }
+
     internal class GameObject
     {
         public int X { get; set; }

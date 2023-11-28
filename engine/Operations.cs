@@ -4,7 +4,6 @@ namespace engine;
 
 internal class Operations
 {
-
     public static void MovePlayer(int deltaX, int deltaY, List<Item> pickedUpItems, ref bool gameSpaceActive)
     {
         Player player = Engine.ActiveProject.ActiveLevel.Objects.OfType<Player>().FirstOrDefault();
@@ -202,7 +201,6 @@ internal class Operations
             }
         }
     }
-
 
     private static ConsoleColor GetObjectColor(string objectType)
     {

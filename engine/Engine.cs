@@ -8,17 +8,20 @@ internal class Engine
     public static List<Project> Projects = new();
     public static Project ActiveProject;
 
+    public static void Main() => Launcher();
+
     public static void Launcher()
     {
         //AddSampleProjectAndObject(); // for dev testing
 
-        Helpers.OutputGreen("Loaded Launcher.\n");
+        Helpers.OutputYellow("Loaded Launcher.\n");
         Helpers.ReadClear();
 
         while (true)
         {
             Helpers.OutputYellow($"Engine Home\n");
             Console.WriteLine($"{ new string('_', 30)}\n");
+
             Console.Write ("1 |");
             Helpers.OutputYellow("\t Load Projects\n");
 
@@ -34,7 +37,7 @@ internal class Engine
             Console.Write("5 |");
             Helpers.OutputYellow("\t Exit Engine\n");
 
-            string? input = Console.ReadLine();
+            string? input = Helpers.InputCyan();
 
             switch (input)
             {
@@ -74,7 +77,7 @@ internal class Engine
 
         Console.WriteLine("\nSelect a project to load (or press any key to go back).");
 
-        string userInput = Console.ReadLine();
+        string userInput = Helpers.InputCyan();
 
         if (int.TryParse(userInput, out int input) && input >= 1 && input <= Projects.Count)
         {
@@ -98,7 +101,7 @@ internal class Engine
         do
         {
             Console.Write("\nProject Name: ");
-            projectName = Console.ReadLine().Trim();
+            projectName = Helpers.InputCyan().Trim();
 
             if (string.IsNullOrEmpty(projectName))
             {
@@ -117,7 +120,7 @@ internal class Engine
         do
         {
             Console.Write("\nProject Description: ");
-            projectDescription = Console.ReadLine().Trim();
+            projectDescription = Helpers.InputCyan().Trim();
 
             if (string.IsNullOrEmpty(projectDescription))
             {
@@ -167,7 +170,7 @@ internal class Engine
             }
 
             Console.WriteLine("\n\nEnter the name of the project to delete (or press any key to go back).");
-            string input = Console.ReadLine();
+            string input = Helpers.InputCyan();
 
             Project projectToDelete = Projects.FirstOrDefault(p => p.Name == input);
 
@@ -228,7 +231,7 @@ internal class Engine
                 "rt             - Return to launcher");
 
             Console.ForegroundColor = ConsoleColor.Cyan;
-            string input = Console.ReadLine().ToLower().Trim();
+            string input = Helpers.InputCyan().ToLower().Trim();
             Console.ResetColor();
 
             switch (input)
@@ -291,8 +294,14 @@ internal class Engine
     {
         while (true)
         {
+            if (ActiveProject.ActiveLevel.Name == "None") 
+            {
+                Helpers.OutputRed("Create a level to add an object.");
+                return;
+            }
+
             Console.WriteLine("\nEnter a command to add an object (something like: 'player myPlayer 0 0')\nYou can also enter \'block\' to place blocks");
-            string command = Console.ReadLine();
+            string command = Helpers.InputCyan();
 
             if (command == "block")
             {
@@ -405,7 +414,7 @@ internal class Engine
             LoadObjects();
 
             Console.WriteLine("\nSelect the object to delete (or enter any key to go back):");
-            string input = Console.ReadLine();
+            string input = Helpers.InputCyan();
 
             bool found = false;
             foreach (var obj in ActiveProject.ActiveLevel.Objects.ToList())
@@ -457,7 +466,20 @@ internal class Engine
     public static void CreateLevel()
     {
         Console.WriteLine("\nEnter the name of your new level");
-        string input = Console.ReadLine();
+        string input = Helpers.InputCyan();
+
+        if (string.IsNullOrEmpty(input)) 
+        {
+            Helpers.OutputRed("\n\tEnter a valid name for your level");
+            return;
+        }
+
+        if (ActiveProject.Levels.Any(level => level.Name == input)) 
+        {
+            Helpers.OutputRed("\n\tA level with this name has already been created");
+            return;
+        }
+
         List<GameObject> newObjectList = new();
 
         Level newLevel = new(input, newObjectList, false);
@@ -479,7 +501,7 @@ internal class Engine
             LoadLevels();
 
             Console.WriteLine("\n\nSelect the level to delete (or enter any key to go back):");
-            string input = Console.ReadLine();
+            string input = Helpers.InputCyan();
 
             bool found = false;
             foreach (var level in ActiveProject.Levels.ToList())
@@ -492,7 +514,8 @@ internal class Engine
                     }
 
                     ActiveProject.Levels.Remove(level);
-                    Helpers.OutputGreen($"\n{level.Name} deleted successfully.");
+                    Helpers.OutputYellow($"\nLevel: \'{level.Name}\' ");
+                    Helpers.OutputGreen("deleted successfully.");
                     found = true;
                     break;
                 }
@@ -501,7 +524,6 @@ internal class Engine
             if (!found)
             {
                 Helpers.OutputRed($"\n\tLevel with name '{input}' not found. Try again.");
-                Helpers.ReadClear();
                 return;
             }
             return;
@@ -541,7 +563,7 @@ internal class Engine
 
         Console.WriteLine("\n\nChoose a level to edit or test");
 
-        string userInput = Console.ReadLine();
+        string userInput = Helpers.InputCyan();
 
         if (int.TryParse(userInput, out int input) && input >= 1 && input <= ActiveProject.Levels.Count)
         {
@@ -562,7 +584,14 @@ internal class Engine
     {
         if (ActiveProject.Levels.Count == 0)
         {
-            Helpers.OutputRed("\n\tCreate a level first to run a game space.");
+            Helpers.OutputRed("\n\tCreate a level to run this game space.");
+            Helpers.ReadClear();
+            return;
+        }
+
+        if (ActiveProject.ActiveLevel.Name == "None") 
+        {
+            Helpers.OutputRed("\n\tSelect an active level to run this game space.");
             Helpers.ReadClear();
             return;
         }
@@ -575,7 +604,6 @@ internal class Engine
         }
 
         Player player = ActiveProject.ActiveLevel.Objects.OfType<Player>().FirstOrDefault();
-        Chaser chaser = ActiveProject.ActiveLevel.Objects.OfType<Chaser>().FirstOrDefault();
 
         bool inInventory = false;
         List<Item> pickedUpItems = new();

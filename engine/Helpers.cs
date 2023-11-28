@@ -23,6 +23,15 @@ internal class Helpers
         Console.ResetColor();
     }
 
+    public static string InputCyan() 
+    { 
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        string input = Console.ReadLine();
+        Console.ResetColor();
+
+        return input;
+    }
+
     public static bool Exit()
     {
         while (true)
