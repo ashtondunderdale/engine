@@ -6,16 +6,16 @@ internal class Project
 {
     public string Name;
     public string Description;
-    public List<GameObject> Objects;
     public string ID;
-    public bool ContainsPlayerObject;
+    public List<Level> Levels;
+    public Level ActiveLevel;
 
-    public Project(string Name, string Description, List<GameObject> Objects, string ID, bool ContainsPlayerObject) 
+    public Project(string Name, string Description, string ID, List<Level> levels, Level activeLevel) 
     {
         this.Name = Name;
         this.Description = Description;
-        this.Objects = Objects;
         this.ID = ID;
-        this.ContainsPlayerObject = ContainsPlayerObject;
+        this.Levels = levels;
+        this.ActiveLevel = activeLevel;
     }
 }

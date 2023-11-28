@@ -1,4 +1,5 @@
 ﻿using Engine;
+using System.Reflection.Emit;
 
 namespace engine;
 
@@ -112,7 +113,10 @@ internal class Engine
         string ID = Helpers.GenerateString(8);
 
         List<GameObject> objects = new();
-        Project project = new(projectName, projectDescription, objects, ID, false);
+        List<Level> levels = new();
+        Level level = new("Level 1", objects, false);
+
+        Project project = new(projectName, projectDescription, ID, levels, level);
         Projects.Add(project);
 
         Helpers.OutputGreen("\n  Project: ");
@@ -161,7 +165,7 @@ internal class Engine
     public static void ListObjects()
     {
 
-        if (ActiveProject.Objects.Count == 0) 
+        if (ActiveProject.ActiveLevel.Objects.Count == 0) 
         {
             Console.WriteLine("\nThis project currently has no objects.\nTry adding a player object to the space with \'add\'.\n\nPress enter.");
             return;
@@ -169,7 +173,7 @@ internal class Engine
 
         Console.WriteLine($"\nLoading objects for: {ActiveProject.Name}");
 
-        foreach (var obj in ActiveProject.Objects)
+        foreach (var obj in ActiveProject.ActiveLevel.Objects)
         {
             Helpers.OutputYellow($"\n  Type: {obj.GetType().Name}\n");
 
@@ -182,15 +186,32 @@ internal class Engine
         }
     }
 
+    public static void ListLevels() 
+    {
+        if (ActiveProject.Levels.Count == 0) return;
+
+        Console.WriteLine($"\nLoading levels for: {ActiveProject.Name}");
+
+        Helpers.OutputYellow($"\n  Active Level: {ActiveProject.ActiveLevel.Name}\n\n");
+        foreach (var level in ActiveProject.Levels)
+        {
+            Helpers.OutputYellow($"\n  Level: {level.Name}");
+        }
+    }
+
     public static void EditSpace()
     {
         while (true)
         {
-            Console.WriteLine("Commands:\n\n\'add\' - to add an object into the space\n" +
-                "\'del\' - To remove an object from the space\n" +
-                "\'play\' - To test the game space\n" +
-                "\'load\' - To display all current space objects" +
-                "\n\n\'return\' - Return to launcher");
+            Console.WriteLine("Commands:\n\n" +
+                "\'add\'          - To add an object into the space\n" +
+                "\'del\'          - To remove an object from the space\n" +
+                "\'play\'         - To test the game space\n" +
+                "\'load\'         - To display all current space objects\n\n" +
+                "\'level\'        - To display all current levels\n" +
+                "\'add level\'    - To create a new level\n" +
+                "\'Select level\' - To selecta level to edit or test\n\n" +
+                "\'return\'       - Return to launcher");
 
             string input = Console.ReadLine().ToLower().Trim();
 
@@ -210,6 +231,21 @@ internal class Engine
 
                 case "load":
                     ListObjects();
+                    Helpers.ReadClear();
+                    break;
+
+                case "level":
+                    ListLevels();
+                    Helpers.ReadClear();
+                    break;
+
+                case "add level":
+                    AddLevel();
+                    Helpers.ReadClear();
+                    break;
+
+                case "select level":
+                    SelectLevel();
                     Helpers.ReadClear();
                     break;
 
@@ -272,7 +308,7 @@ internal class Engine
                 int startingX = Convert.ToInt32(parts[2]);
                 int startingY = Convert.ToInt32(parts[3]);
 
-                if (ActiveProject.Objects.Any(obj => obj.Name == objectName))
+                if (ActiveProject.ActiveLevel.Objects.Any(obj => obj.Name == objectName))
                 {
                     Helpers.OutputRed($"\n\tThe name '{objectName}' is already taken, choose a different object name.");
                     Helpers.ReadClear();
@@ -282,7 +318,7 @@ internal class Engine
                 switch (objectType.ToLower())
                 {
                     case "player":
-                        if (ActiveProject.ContainsPlayerObject)
+                        if (ActiveProject.ActiveLevel.ContainsPlayerObject)
                         {
                             Helpers.OutputRed("\n\tYou can only add one player object.");
                             Helpers.ReadClear();
@@ -290,23 +326,23 @@ internal class Engine
                         }
 
                         Player player = new(startingX, startingY, objectName);
-                        ActiveProject.Objects.Add(player);
-                        ActiveProject.ContainsPlayerObject = true;
+                        ActiveProject.ActiveLevel.Objects.Add(player);
+                        ActiveProject.ActiveLevel.ContainsPlayerObject = true;
                         break;
 
                     case "chaser":
                         Chaser chaser = new(startingX, startingY, objectName);
-                        ActiveProject.Objects.Add(chaser);
+                        ActiveProject.ActiveLevel.Objects.Add(chaser);
                         break;
 
                     case "item":
                         Item item = new(startingX, startingY, objectName);
-                        ActiveProject.Objects.Add(item);
+                        ActiveProject.ActiveLevel.Objects.Add(item);
                         break;
 
                     case "win":
                         WinTile winTile = new(startingX, startingY, objectName);
-                        ActiveProject.Objects.Add(winTile);
+                        ActiveProject.ActiveLevel.Objects.Add(winTile);
                         break;
 
                     default:
@@ -334,7 +370,7 @@ internal class Engine
     {
         while (true)
         {
-            if (ActiveProject.Objects.Count == 0)
+            if (ActiveProject.ActiveLevel.Objects.Count == 0)
             {
                 Helpers.OutputYellow("\nNo objects available to delete.");
                 Helpers.ReadClear();
@@ -347,11 +383,11 @@ internal class Engine
             string input = Console.ReadLine();
 
             bool found = false;
-            foreach (var obj in ActiveProject.Objects.ToList())
+            foreach (var obj in ActiveProject.ActiveLevel.Objects.ToList())
             {
                 if (obj.Name == input)
                 {
-                    ActiveProject.Objects.Remove(obj);
+                    ActiveProject.ActiveLevel.Objects.Remove(obj);
                     Helpers.OutputGreen($"\n{obj.Name} deleted successfully.");
                     found = true;
                     break;
@@ -389,19 +425,26 @@ internal class Engine
 
     public static void RunSpace()
     {
-        if (!ActiveProject.Objects.OfType<Player>().Any())
+        if (ActiveProject.Levels.Count == 0)
+        {
+            Helpers.OutputRed("\n\tCreate a level first to run a game space.");
+            Helpers.ReadClear();
+            return;
+        }
+
+        if (!ActiveProject.ActiveLevel.Objects.OfType<Player>().Any())
         {
             Helpers.OutputRed("\n\tNo player object in the space. Add a player object before running the space.");
             Helpers.ReadClear();
             return;
         }
 
-        Player player = ActiveProject.Objects.OfType<Player>().FirstOrDefault();
-        Chaser chaser = ActiveProject.Objects.OfType<Chaser>().FirstOrDefault();
+        Player player = ActiveProject.ActiveLevel.Objects.OfType<Player>().FirstOrDefault();
+        Chaser chaser = ActiveProject.ActiveLevel.Objects.OfType<Chaser>().FirstOrDefault();
 
         bool inInventory = false;
         List<Item> pickedUpItems = new();
-        bool gameSpaceActive = true; // for when the user goes on a win tile
+        bool gameSpaceActive = true;
 
         while (gameSpaceActive)
         {
@@ -451,15 +494,15 @@ internal class Engine
                     break;
             }
 
-            if (ActiveProject.Objects.OfType<Chaser>().Any())
+            if (ActiveProject.ActiveLevel.Objects.OfType<Chaser>().Any())
             {
-                foreach (Chaser chaserObj in ActiveProject.Objects.OfType<Chaser>())
+                foreach (Chaser chaserObj in ActiveProject.ActiveLevel.Objects.OfType<Chaser>())
                 {
-                    chaserObj?.ChasePlayer(player, ActiveProject.Objects);
+                    chaserObj?.ChasePlayer(player, ActiveProject.ActiveLevel.Objects);
                 }
             }
 
-            foreach (Chaser chaserObj in ActiveProject.Objects.OfType<Chaser>()) 
+            foreach (Chaser chaserObj in ActiveProject.ActiveLevel.Objects.OfType<Chaser>()) 
             {
                 if (player != null && chaserObj != null && player.X == chaserObj.X && player.Y == chaserObj.Y)
                 {
@@ -477,6 +520,45 @@ internal class Engine
         ResetPlayerInventory(pickedUpItems);
     }
 
+    public static void AddLevel() 
+    {
+        Console.WriteLine("\nEnter the name of your new level");
+        string input = Console.ReadLine();
+        List<GameObject> newObjectList = new();
+
+        Level newLevel = new(input, newObjectList, false);
+        ActiveProject.Levels.Add(newLevel);
+        Helpers.OutputGreen($"\nAdded level");
+        Helpers.OutputYellow($" \'{newLevel.Name}\'");
+    }
+
+    public static void SelectLevel() 
+    {
+        ListLevels();
+
+        if (ActiveProject.Levels.Count == 0) 
+        {
+            Helpers.OutputRed("\n\tThere are no levels to load in this project.");
+            return;
+        }
+
+        Console.WriteLine("\n\nChoose a level to edit or test");
+
+        string userInput = Console.ReadLine();
+
+        if (int.TryParse(userInput, out int input) && input >= 1 && input <= ActiveProject.Levels.Count)
+        {
+            ActiveProject.ActiveLevel = ActiveProject.Levels[input - 1];
+            Console.Clear();
+            Helpers.OutputYellow("Loaded Level.\n\n");
+            EditSpace();
+        }
+        else
+        {
+            Helpers.OutputRed("\n\tInvalid input. Please enter a valid level number (or press any key to go back).");
+            return;
+        }
+    }
 
     private static void ToggleInventory(Player player, ref bool inInventory)
     {
@@ -502,7 +584,7 @@ internal class Engine
 
     private static void MovePlayer(int deltaX, int deltaY, List<Item> pickedUpItems, ref bool gameSpaceActive)
     {
-        Player player = ActiveProject.Objects.OfType<Player>().FirstOrDefault();
+        Player player = ActiveProject.ActiveLevel.Objects.OfType<Player>().FirstOrDefault();
 
         if (player != null)
         {
@@ -511,7 +593,7 @@ internal class Engine
 
             if (newX >= 0 && newX < Console.WindowWidth && newY >= 0 && newY < Console.WindowHeight)
             {
-                bool tileBlocked = ActiveProject.Objects.OfType<Block>().Any(block =>
+                bool tileBlocked = ActiveProject.ActiveLevel.Objects.OfType<Block>().Any(block =>
                     block.X == newX && block.Y == newY);
 
                 if (!tileBlocked)
@@ -519,7 +601,7 @@ internal class Engine
                     player.X = newX;
                     player.Y = newY;
 
-                    WinTile winTile = ActiveProject.Objects.OfType<WinTile>().FirstOrDefault(winTile =>
+                    WinTile winTile = ActiveProject.ActiveLevel.Objects.OfType<WinTile>().FirstOrDefault(winTile =>
                         winTile.X == newX && winTile.Y == newY);
 
                     if (winTile is WinTile)
@@ -533,13 +615,13 @@ internal class Engine
                         return;
                     }
 
-                    Item tileItem = ActiveProject.Objects.OfType<Item>().FirstOrDefault(item =>
+                    Item tileItem = ActiveProject.ActiveLevel.Objects.OfType<Item>().FirstOrDefault(item =>
                         item.X == newX && item.Y == newY);
 
                     if (tileItem != null)
                     {
                         player.Inventory.Add(tileItem);
-                        ActiveProject.Objects.Remove(tileItem);
+                        ActiveProject.ActiveLevel.Objects.Remove(tileItem);
                         pickedUpItems.Add(tileItem);
                     }
                 }
@@ -549,8 +631,8 @@ internal class Engine
 
     private static void ResetPlayerPosition()
     {
-        Player player = ActiveProject.Objects.OfType<Player>().FirstOrDefault();
-        Chaser chaser = ActiveProject.Objects.OfType<Chaser>().FirstOrDefault();
+        Player player = ActiveProject.ActiveLevel.Objects.OfType<Player>().FirstOrDefault();
+        Chaser chaser = ActiveProject.ActiveLevel.Objects.OfType<Chaser>().FirstOrDefault();
 
         if (player is not null)
         {
@@ -567,19 +649,22 @@ internal class Engine
 
     private static void ResetPlayerInventory(List<Item> pickedUpItems) 
     {
-        Player player = ActiveProject.Objects.OfType<Player>().FirstOrDefault();
+        Player player = ActiveProject.ActiveLevel.Objects.OfType<Player>().FirstOrDefault();
         if (player is not null) player.Inventory.Clear();
 
         foreach (Item item in pickedUpItems)
         {
-            ActiveProject.Objects.Add(item);
+            ActiveProject.ActiveLevel.Objects.Add(item);
         }
     }
 
     private static void DisplaySpace()
     {
-        Console.SetCursorPosition(0, 29);
+        Console.SetCursorPosition(0, 28);
         Console.Write("GameSpace");
+
+        Console.SetCursorPosition(0, 29);
+        Console.Write($"Active: {ActiveProject.ActiveLevel.Name}");
 
         Console.SetCursorPosition(0, 28);
         Console.Write(new string('_', 120));
@@ -589,7 +674,7 @@ internal class Engine
         int windowWidth = Console.WindowWidth;
         int windowHeight = Console.WindowHeight;
 
-        foreach (var obj in ActiveProject.Objects)
+        foreach (var obj in ActiveProject.ActiveLevel.Objects)
         {
             int x = obj.X;
             int y = obj.Y;
@@ -649,7 +734,13 @@ internal class Engine
         WinTile winTile = new(10, 12, "item");
         objects.Add(winTile);
 
-        Project sampleProject = new("Test", "Test Description", objects, "TESTID", true);
+        Level testLevel = new("Level 1", objects, false);
+        List<Level> levels = new()
+        {
+            testLevel
+        };
+
+        Project sampleProject = new("Test", "Test Description", "TESTID", levels, testLevel);
         Projects.Add(sampleProject);
     }
 
@@ -664,7 +755,7 @@ internal class Engine
 
             Console.ForegroundColor = GetObjectColor(objectType);
 
-            foreach (var obj in ActiveProject.Objects)
+            foreach (var obj in ActiveProject.ActiveLevel.Objects)
             {
                 if (obj is GameObject gameObject && gameObject.Type == objectType)
                 {
@@ -702,7 +793,7 @@ internal class Engine
                     break;
 
                 case ConsoleKey.Enter:
-                    if (tempObject is not null) ActiveProject.Objects.Add(tempObject);
+                    if (tempObject is not null) ActiveProject.ActiveLevel.Objects.Add(tempObject);
                     break;
 
                 case ConsoleKey.Escape:
