@@ -234,7 +234,25 @@ internal class Engine
 
             if (command == "block")
             {
-                AddBlocks();
+                AddMultipleObjects(command);
+                return;
+            }
+
+            else if (command == "item")
+            {
+                AddMultipleObjects(command);
+                return;
+            }
+
+            else if (command == "win") 
+            {
+                AddMultipleObjects(command);
+                return;
+            }
+
+            else if (command == "chaser")
+            {
+                AddMultipleObjects(command);
                 return;
             }
 
@@ -561,6 +579,12 @@ internal class Engine
 
     private static void DisplaySpace()
     {
+        Console.SetCursorPosition(0, 29);
+        Console.Write("GameSpace");
+
+        Console.SetCursorPosition(0, 28);
+        Console.Write(new string('_', 120));
+
         Console.SetCursorPosition(0, 0);
 
         int windowWidth = Console.WindowWidth;
@@ -630,55 +654,132 @@ internal class Engine
         Projects.Add(sampleProject);
     }
 
-    public static void AddBlocks()
+    public static void AddMultipleObjects(string objectType)
     {
-        Block tempBlock = null;
+        GameObject tempObject = null;
 
         while (true)
         {
             Console.Clear();
+            DisplaySpace();
 
-            foreach (var block in ActiveProject.Objects.OfType<Block>())
+            Console.ForegroundColor = GetObjectColor(objectType);
+
+            foreach (var obj in ActiveProject.Objects)
             {
-                Console.SetCursorPosition(block.X, block.Y);
-                Console.Write("+");
+                if (obj is GameObject gameObject && gameObject.Type == objectType)
+                {
+                    Console.SetCursorPosition(gameObject.X, gameObject.Y);
+                    Console.Write(GetObjectSymbol(objectType));
+                }
             }
 
-            if (tempBlock != null)
+            if (tempObject != null)
             {
-                Console.SetCursorPosition(tempBlock.X, tempBlock.Y);
-                Console.Write("+");
+                Console.SetCursorPosition(tempObject.X, tempObject.Y);
+                Console.Write(GetObjectSymbol(objectType));
             }
+
+            Console.ResetColor();
 
             ConsoleKeyInfo keyInfo = Console.ReadKey();
 
             switch (keyInfo.Key)
             {
                 case ConsoleKey.UpArrow:
-                    if (tempBlock == null || tempBlock.Y > 0) tempBlock = new Block(tempBlock?.X ?? 0, tempBlock?.Y - 1 ?? 0, "Block");
+                    tempObject = CreateObject(tempObject, objectType, tempObject?.X ?? 0, tempObject?.Y - 1 ?? 0);
                     break;
 
                 case ConsoleKey.DownArrow:
-                    if (tempBlock == null || tempBlock.Y < Console.WindowHeight - 1) tempBlock = new Block(tempBlock?.X ?? 0, tempBlock?.Y + 1 ?? 0, "Block");
+                    tempObject = CreateObject(tempObject, objectType, tempObject?.X ?? 0, tempObject?.Y + 1 ?? 0);
                     break;
 
                 case ConsoleKey.LeftArrow:
-                    if (tempBlock == null || tempBlock.X > 0) tempBlock = new Block(tempBlock?.X - 1 ?? 0, tempBlock?.Y ?? 0, "Block");
+                    tempObject = CreateObject(tempObject, objectType, tempObject?.X - 1 ?? 0, tempObject?.Y ?? 0);
                     break;
 
                 case ConsoleKey.RightArrow:
-                    if (tempBlock == null || tempBlock.X < Console.WindowWidth - 1) tempBlock = new Block(tempBlock?.X + 1 ?? 0, tempBlock?.Y ?? 0, "Block");
+                    tempObject = CreateObject(tempObject, objectType, tempObject?.X + 1 ?? 0, tempObject?.Y ?? 0);
                     break;
 
                 case ConsoleKey.Enter:
-                    if (tempBlock is not null) ActiveProject.Objects.Add(tempBlock);
+                    if (tempObject is not null) ActiveProject.Objects.Add(tempObject);
                     break;
 
-                case ConsoleKey.Escape: Console.Clear();
+                case ConsoleKey.Escape:
+                    Console.Clear();
                     return;
 
-                default: break;
+                default:
+                    break;
             }
         }
     }
+
+
+    private static ConsoleColor GetObjectColor(string objectType)
+    {
+        switch (objectType)
+        {
+            case "item":
+                return ConsoleColor.Cyan;
+
+            case "win":
+                return ConsoleColor.Green;
+
+            case "chaser":
+                return ConsoleColor.Red;
+
+            case "block":
+                return ConsoleColor.White;
+
+            default:
+                return ConsoleColor.Black;
+        }
+    }
+
+    private static char GetObjectSymbol(string objectType)
+    {
+        switch (objectType)
+        {
+            case "item":
+                return 'i';
+
+            case "win":
+                return 'X';
+
+            case "block":
+                return '+';
+
+            case "chaser":
+                return '0';
+
+            default:
+                return ' ';
+        }
+    }
+
+    private static GameObject CreateObject(GameObject existingObject, string objectType, int x, int y)
+    {
+        switch (objectType)
+        {
+            case "block":
+                return new Block(x, y, objectType);
+
+            case "item":
+                return new Item(x, y, objectType);
+
+            case "win":
+                return new WinTile(x, y, objectType);
+
+            case "chaser":
+                return new Chaser(x, y, objectType);
+
+            default:
+                break;
+        }
+
+        return existingObject;
+    }
+
 }

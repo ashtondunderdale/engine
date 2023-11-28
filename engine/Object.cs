@@ -5,12 +5,14 @@
         public int X { get; set; }
         public int Y { get; set; }
         public virtual string Name { get; set; }
+        public string Type { get; set; }
 
-        public GameObject(int x, int y, string name)
+        public GameObject(int x, int y, string name, string type)
         {
             X = x;
             Y = y;
             Name = name;
+            Type = type;
         }
     }
 
@@ -19,7 +21,7 @@
         public List<Item> Inventory { get; private set; }
         public int OriginalX { get; private set; }
         public int OriginalY { get; private set; }
-        public Player(int x, int y, string name) : base(x, y, name)
+        public Player(int x, int y, string name) : base(x, y, name, "player")
         {
             Inventory = new List<Item>();
             OriginalX = x;
@@ -29,7 +31,7 @@
 
     internal class Block : GameObject
     {
-        public Block(int x, int y, string name) : base(x, y, name) { }
+        public Block(int x, int y, string name) : base(x, y, name, "block") { }
     }
 
     internal class Chaser : GameObject
@@ -38,7 +40,7 @@
         public int OriginalX { get; private set; }
         public int OriginalY { get; private set; }
 
-        public Chaser(int x, int y, string name) : base(x, y, name)
+        public Chaser(int x, int y, string name) : base(x, y, name, "chaser")
         {
             lastMoveTime = DateTime.Now;
             OriginalX = x;
@@ -78,7 +80,7 @@
             {
                 if (obj.X == x && obj.Y == y && !(obj is Chaser))
                 {
-                    return false; 
+                    return false;
                 }
             }
 
@@ -91,7 +93,7 @@
         public int OriginalX { get; private set; }
         public int OriginalY { get; private set; }
 
-        public Item(int x, int y, string name) : base(x, y, name)
+        public Item(int x, int y, string name) : base(x, y, name, "item")
         {
             OriginalX = x;
             OriginalY = y;
@@ -103,7 +105,7 @@
         public int OriginalX { get; private set; }
         public int OriginalY { get; private set; }
 
-        public WinTile(int x, int y, string name) : base(x, y, name)
+        public WinTile(int x, int y, string name) : base(x, y, name, "win")
         {
             OriginalX = x;
             OriginalY = y;
