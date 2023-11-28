@@ -9,7 +9,7 @@ internal class Engine
     public static void Main() 
     {
         string launcherMessage = "Loaded Launcher.";
-        AddSampleProjectAndObject(); // for dev testing
+        //AddSampleProjectAndObject(); // for dev testing
 
         Helpers.OutputAsTyped(launcherMessage, 25, ConsoleColor.Yellow);
         Helpers.ReadClear();
@@ -325,11 +325,13 @@ internal class Engine
                 case "help cmd":
                     Help.CommandHelp();
                     Helpers.ReadClear();
+                    Console.Write("e");
                     break;
 
                 case "help err":
                     Help.ErrorHelp();
                     Helpers.ReadClear();
+                    Console.Write("e");
                     break;
 
                 case "rt":
