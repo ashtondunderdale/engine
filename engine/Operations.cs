@@ -34,6 +34,7 @@ internal class Operations
                         ResetPlayerPosition();
                         ResetPlayerInventory(pickedUpItems);
                         gameSpaceActive = false;
+                        Console.Write("e");
                         return;
                     }
 
@@ -201,7 +202,7 @@ internal class Operations
 
                 case ConsoleKey.Escape:
                     Console.Clear();
-                    Console.Write("e"); // this line stops the program from crashing, do not ask just keep it.
+                    Console.Write("e"); // this line stops the program from breaking, do not ask just keep it.
                     return;
 
                 default:
