@@ -10,14 +10,21 @@ internal class Engine
 
     public static void Launcher()
     {
-        AddSampleProjectAndObject(); // for dev testing
+        //AddSampleProjectAndObject(); // for dev testing
 
-        Console.WriteLine("Loaded Launcher.\n");
+        Helpers.OutputYellow("Loaded Launcher.\n");
         Helpers.ReadClear();
 
         while (true)
         {
-            Console.WriteLine("1. Load Projects\n2. Create a new project\n3. Delete a project\n4. Help\n5. Exit");
+            Helpers.OutputYellow($"Engine Home\n");
+            Console.WriteLine($"{ new string('_', 20)}\n");
+            Console.WriteLine("" +
+                "1 |\t Load Projects\n" +
+                "2 |\t Create New Project\n" +
+                "3 |\t Delete Project\n\n" +
+                "4 |\t Engine Help Guide\n\n" +
+                "5 |\t Exit Engine");
             string? input = Console.ReadLine();
 
             switch (input)
@@ -52,7 +59,7 @@ internal class Engine
 
         foreach (var project in Projects)
         {
-            Helpers.OutputYellow($"\n{projectIndex} | {project.ID}\n  {project.Name}\n  {project.Description}\n\n");
+            Helpers.OutputYellow($"\n{projectIndex} | {project.Name}\n    {project.Description}\n\n");
             projectIndex++;
         }
 
@@ -117,7 +124,7 @@ internal class Engine
         //Level level = new("Level 1", objects, false);
         Level level = new("None", objects, false);
 
-        Project project = new(projectName, projectDescription, ID, levels, level);
+        Project project = new(projectName, projectDescription, levels, level);
         Projects.Add(project);
 
         Helpers.OutputGreen("\n  Project: ");
@@ -448,7 +455,7 @@ internal class Engine
 
         foreach (var project in Projects)
         {
-            Helpers.OutputYellow($"\n{projectIndex} | {project.ID}\n  {project.Name}\n  {project.Description}\n\n");
+            Helpers.OutputYellow($"\n{projectIndex} | {project.Name}\n  {project.Description}\n\n");
             projectIndex++;
         }
     }
@@ -813,7 +820,7 @@ internal class Engine
             testLevel
         };
 
-        Project sampleProject = new("Test", "Test Description", "TESTID", levels, testLevel);
+        Project sampleProject = new("Test", "Test Description", levels, testLevel);
         Projects.Add(sampleProject);
     }
 
