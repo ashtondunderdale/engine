@@ -10,7 +10,9 @@ internal class Engine
 
     public static void Main() 
     {
-        Helpers.OutputYellow("Loaded Launcher.\n");
+        string launcherMessage = "Loaded Launcher.";
+
+        Helpers.OutputAsTyped(launcherMessage, 25, ConsoleColor.Yellow);
         Helpers.ReadClear();
 
         Launcher();
@@ -120,7 +122,12 @@ internal class Engine
                 projectName = null;
             }
 
-        } while (string.IsNullOrEmpty(projectName));
+            if (projectName.Length >= 90)
+            {
+                Helpers.OutputRed($"\n\tProject Name must be less than 90 characters\n");
+            }
+
+        } while (string.IsNullOrEmpty(projectName) || projectName.Length >= 90);
 
         string? projectDescription;
 
@@ -134,7 +141,12 @@ internal class Engine
                 Helpers.OutputRed("\n\tProject description cannot be empty.\n");
             }
 
-        } while (string.IsNullOrEmpty(projectDescription));
+            if (projectDescription.Length >= 90)
+            {
+                Helpers.OutputRed("\n\tProject Description must be less than 90 characters\n");
+            }
+
+        } while (string.IsNullOrEmpty(projectDescription) || projectDescription.Length >= 90);
 
         List<GameObject> objects = new();
         List<Level> levels = new();
@@ -145,7 +157,7 @@ internal class Engine
 
         Helpers.OutputGreen("\n  Project: ");
         Helpers.OutputYellow($"'{project.Name}'");
-        Helpers.OutputGreen(" has been created.");
+        Helpers.OutputGreen($" has been created.");
 
         Helpers.ReadClear();
     }
@@ -220,26 +232,46 @@ internal class Engine
 
     public static void EditSpace()
     {
+        int padValue = 20;
+
         while (true)
         {
             Console.Clear();
 
-            Console.WriteLine("Commands:\n\n" +
-                "cr obj         - Create a new object for the currently active level\n" +
-                "dl obj         - Removes an object from the currently active level\n" +
-                "ld obj         - Displays all objects stored in the currently active level\n\n" +
+            Helpers.OutputYellow($"Poject {new string(' ', 20)}");
+            Console.WriteLine($"{ActiveProject.Name}");
 
-                "cr lvl         - Creates a new level for the currently active project\n" +
-                "dl lvl         - Removes a level from the currently active project\n" +
-                "ld lvl         - Displays all levels stored in the currently active project\n" +
-                "sl lvl         - Selects a level from the currently active project\n\n" +
+            Helpers.OutputYellow($"Desciption {new string(' ', 16)}");
+            Console.WriteLine($"{ActiveProject.Description}");
+            Console.WriteLine(new string('_', 120) + "\n");
 
-                "pl             - Runs the current state of the game space\n" +
-                "help           - Shows a list of commands + some other useful information\n\n" +
+            Helpers.OutputYellow("CR OBJ");
+            Console.Write($"{new string(' ', padValue)} - Create a new object for the currently active level\n");
 
-                "rt             - Return to launcher");
+            Helpers.OutputYellow("DL OBJ");
+            Console.Write($"{new string(' ', padValue)} - Removes an object from the currently active level\n");
+            Helpers.OutputYellow("LD OBJ");
+            Console.Write($"{new string(' ', padValue)} - Displays all objects stored in the currently active level\n\n");
+
+            Helpers.OutputYellow("CR LVL");
+            Console.Write($"{new string(' ', padValue)} - Creates a new level for the currently active project\n");
+            Helpers.OutputYellow("DL LVL");
+            Console.Write($"{new string(' ', padValue)} - Removes a level from the currently active project\n");
+            Helpers.OutputYellow("LD LVL");
+            Console.Write($"{new string(' ', padValue)} - Displays all levels stored in the currently active project\n");
+            Helpers.OutputYellow("SL LVL");
+            Console.Write($"{new string(' ', padValue)} - Selects an active level from the currently active project\n\n");
+
+            Helpers.OutputYellow("PL    ");
+            Console.Write($"{new string(' ', padValue)} - Runs the current state of the game space\n");
+            Helpers.OutputYellow("HELP  ");
+            Console.Write($"{new string(' ', padValue)} - Shows a list of commands + some other useful information\n\n");
+            Helpers.OutputYellow("RT    ");
+            Console.Write($"{new string(' ', padValue)} - Return to launcher\n");
+
 
             Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine();
             string input = Helpers.InputCyan().ToLower().Trim();
             Console.ResetColor();
 
@@ -434,20 +466,20 @@ internal class Engine
             Console.WriteLine("\nSelect the object to delete (or enter any key to go back):");
             string input = Helpers.InputCyan();
 
-            bool found = false;
-            var objectsList = ActiveProject.ActiveLevel.Objects.ToList();
+bool found = false;
+var objectsList = ActiveProject.ActiveLevel.Objects.ToList();
 
-            for (int i = objectsList.Count - 1; i >= 0; i--)
-            {
-                var obj = objectsList[i];
-                if (obj.Name == input)
-                {
-                    ActiveProject.ActiveLevel.Objects.Remove(obj);
-                    Helpers.OutputGreen($"\n{obj.Name} deleted successfully.");
-                    found = true;
-                    break;
-                }
-            }
+for (int i = objectsList.Count - 1; i >= 0; i--)
+{
+    var obj = objectsList[i];
+    if (obj.Name == input)
+    {
+        ActiveProject.ActiveLevel.Objects.Remove(obj);
+        Helpers.OutputGreen($"\n{obj.Name} deleted successfully.");
+        found = true;
+        break;
+    }
+}
 
 
             if (!found)
@@ -606,21 +638,21 @@ internal class Engine
     {
         if (ActiveProject.Levels.Count == 0)
         {
-            Helpers.OutputRed("\n\tCreate a level to run this game space.");
+            Helpers.OutputYellow("\nCreate a level to run this game space.");
             Helpers.ReadClear();
             return;
         }
 
         if (ActiveProject.ActiveLevel.Name == "None") 
         {
-            Helpers.OutputRed("\n\tSelect an active level to run this game space.");
+            Helpers.OutputYellow("\nSelect an active level to run this game space.");
             Helpers.ReadClear();
             return;
         }
 
         if (!ActiveProject.ActiveLevel.Objects.OfType<Player>().Any())
         {
-            Helpers.OutputRed("\n\tNo player object in the space. Add a player object before running the space.");
+            Helpers.OutputYellow("\nNo player object in the space. Add a player object before running the space.");
             Helpers.ReadClear();
             return;
         }

@@ -59,4 +59,16 @@ internal class Helpers
         Console.ReadKey();
         Console.Clear();
     }
+
+    public static void OutputAsTyped(string inputString, int delay, ConsoleColor colour)
+    {
+        Console.ForegroundColor= ConsoleColor.Yellow;
+        foreach (char c in inputString)
+        {
+            Console.Write(c);
+            Thread.Sleep(delay);
+        }
+
+        Console.ResetColor();
+    }
 }
