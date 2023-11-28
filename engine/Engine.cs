@@ -1,6 +1,4 @@
 ﻿using Engine;
-using System.Reflection.Emit;
-
 namespace engine;
 
 internal class Engine
@@ -20,7 +18,7 @@ internal class Engine
 
     public static void Launcher()
     {
-        //AddSampleProjectAndObject(); // for dev testing
+        AddSampleProjectAndObject(); // for dev testing
         while (true)
         {
             Console.Clear();
@@ -238,11 +236,11 @@ internal class Engine
         {
             Console.Clear();
 
-            Helpers.OutputYellow($"Poject {new string(' ', 20)}");
-            Console.WriteLine($"{ActiveProject.Name}");
+            Helpers.OutputYellow($"Project {new string(' ', 19)}");
+            Helpers.OutputGreen($"{ActiveProject.Name}\n");
 
             Helpers.OutputYellow($"Desciption {new string(' ', 16)}");
-            Console.WriteLine($"{ActiveProject.Description}");
+            Helpers.OutputGreen($"{ActiveProject.Description}\n");
             Console.WriteLine(new string('_', 120) + "\n");
 
             Helpers.OutputYellow("CR OBJ");
@@ -268,7 +266,6 @@ internal class Engine
             Console.Write($"{new string(' ', padValue)} - Shows a list of commands + some other useful information\n\n");
             Helpers.OutputYellow("RT    ");
             Console.Write($"{new string(' ', padValue)} - Return to launcher\n");
-
 
             Console.ForegroundColor = ConsoleColor.Cyan;
             Console.WriteLine();
@@ -466,21 +463,20 @@ internal class Engine
             Console.WriteLine("\nSelect the object to delete (or enter any key to go back):");
             string input = Helpers.InputCyan();
 
-bool found = false;
-var objectsList = ActiveProject.ActiveLevel.Objects.ToList();
+            bool found = false;
+            var objectsList = ActiveProject.ActiveLevel.Objects.ToList();
 
-for (int i = objectsList.Count - 1; i >= 0; i--)
-{
-    var obj = objectsList[i];
-    if (obj.Name == input)
-    {
-        ActiveProject.ActiveLevel.Objects.Remove(obj);
-        Helpers.OutputGreen($"\n{obj.Name} deleted successfully.");
-        found = true;
-        break;
-    }
-}
-
+            for (int i = objectsList.Count - 1; i >= 0; i--)
+            {
+                var obj = objectsList[i];
+                if (obj.Name == input)
+                {
+                    ActiveProject.ActiveLevel.Objects.Remove(obj);
+                    Helpers.OutputGreen($"\n{obj.Name} deleted successfully.");
+                    found = true;
+                    break;
+                }
+            }
 
             if (!found)
             {
@@ -667,14 +663,8 @@ for (int i = objectsList.Count - 1; i >= 0; i--)
         {
             Console.Clear();
 
-            if (inInventory)
-            {
-                Operations.DisplayInventory(player);
-            }
-            else
-            {
-                Operations.DisplaySpace();
-            }
+            if (inInventory) Operations.DisplayInventory(player);
+            else Operations.DisplaySpace();
 
             ConsoleKeyInfo keyInfo = Console.ReadKey();
 

@@ -86,7 +86,8 @@ internal class Operations
         Console.Write("GameSpace");
 
         Console.SetCursorPosition(0, 29);
-        Console.Write($"Active: {Engine.ActiveProject.ActiveLevel.Name}");
+        Helpers.OutputYellow($"Active: ");
+        Helpers.OutputGreen(Engine.ActiveProject.ActiveLevel.Name);
 
         Console.SetCursorPosition(0, 28);
         Console.Write(new string('_', 120));
@@ -156,15 +157,21 @@ internal class Operations
                 if (obj is GameObject gameObject && gameObject.Type == objectType)
                 {
                     Console.SetCursorPosition(gameObject.X, gameObject.Y);
+                    
+                    Console.Write(GetObjectSymbol(objectType));
+                }
+
+            }
+
+            if (tempObject is not null)
+            {
+                if (tempObject.X >= 0 && tempObject.X < Console.WindowWidth && tempObject.Y >= 0 && tempObject.Y < Console.WindowHeight)
+                {
+                    Console.SetCursorPosition(tempObject.X, tempObject.Y);
                     Console.Write(GetObjectSymbol(objectType));
                 }
             }
 
-            if (tempObject != null)
-            {
-                Console.SetCursorPosition(tempObject.X, tempObject.Y);
-                Console.Write(GetObjectSymbol(objectType));
-            }
 
             Console.ResetColor();
 
@@ -194,6 +201,7 @@ internal class Operations
 
                 case ConsoleKey.Escape:
                     Console.Clear();
+                    Console.Write("e"); // this line stops the program from crashing, do not ask just keep it.
                     return;
 
                 default:
