@@ -114,7 +114,8 @@ internal class Engine
 
         List<GameObject> objects = new();
         List<Level> levels = new();
-        Level level = new("Level 1", objects, false);
+        //Level level = new("Level 1", objects, false);
+        Level level = new("None", objects, false);
 
         Project project = new(projectName, projectDescription, ID, levels, level);
         Projects.Add(project);
@@ -167,7 +168,7 @@ internal class Engine
 
         if (ActiveProject.ActiveLevel.Objects.Count == 0) 
         {
-            Console.WriteLine("\nThis project currently has no objects.\nTry adding a player object to the space with \'add\'.\n\nPress enter.");
+            Helpers.OutputRed("\n\tThis project currently has no objects.");
             return;
         }
 
@@ -188,14 +189,22 @@ internal class Engine
 
     public static void ListLevels() 
     {
-        if (ActiveProject.Levels.Count == 0) return;
+        if (ActiveProject.Levels.Count == 0) 
+        {
+            Helpers.OutputRed("\nThere are no levels to list.");
+        }
 
-        Console.WriteLine($"\nLoading levels for: {ActiveProject.Name}");
+        Console.WriteLine($"\n\nLoading levels for: {ActiveProject.Name}");
 
-        Helpers.OutputYellow($"\n  Active Level: {ActiveProject.ActiveLevel.Name}\n\n");
+        Helpers.OutputYellow($"\n\tActive Level:");
+        Helpers.OutputGreen($" \'{ActiveProject.ActiveLevel.Name}\'\n\n");
+
+        int index = 0;
+
         foreach (var level in ActiveProject.Levels)
         {
-            Helpers.OutputYellow($"\n  Level: {level.Name}");
+            index++;
+            Helpers.OutputYellow($"\n\t  {index} | {level.Name}");
         }
     }
 
@@ -204,54 +213,69 @@ internal class Engine
         while (true)
         {
             Console.WriteLine("Commands:\n\n" +
-                "\'add\'          - To add an object into the space\n" +
-                "\'del\'          - To remove an object from the space\n" +
-                "\'play\'         - To test the game space\n" +
-                "\'load\'         - To display all current space objects\n\n" +
-                "\'level\'        - To display all current levels\n" +
-                "\'add level\'    - To create a new level\n" +
-                "\'Select level\' - To selecta level to edit or test\n\n" +
-                "\'return\'       - Return to launcher");
+                "cr obj         - Create a new object for the currently active level\n" +
+                "dl obj         - Removes an object from the currently active level\n" +
+                "ld obj         - Displays all objects stored in the currently active level\n\n" +
+                
+                "cr lvl         - Creates a new level for the currently active project\n" +
+                "dl lvl         - Removes a level from the currently active project\n" +
+                "ld lvl         - Displays all levels stored in the currently active project\n" +
+                "sl lvl         - Selects a level from the currently active project\n\n" +
+
+                "pl             - Runs the current state of the game space\n" +
+                "help           - Shows a list of commands + some other useful information\n\n" + // make user command input text coloured
+
+                "rt             - Return to launcher");
 
             string input = Console.ReadLine().ToLower().Trim();
 
             switch (input) 
             {
-                case "add":
+                case "cr obj":
                     AddObject();
                     break;
 
-                case "del":
+                case "dl obj":
                     DeleteObject();
                     break;
 
-                case "play":
+                case "pl":
                     RunSpace();
                     break;
 
-                case "load":
+                case "ld obj":
                     ListObjects();
                     Helpers.ReadClear();
                     break;
 
-                case "level":
+                case "ld lvl":
                     ListLevels();
                     Helpers.ReadClear();
                     break;
 
-                case "add level":
+                case "cr lvl":
                     AddLevel();
                     Helpers.ReadClear();
                     break;
 
-                case "select level":
+                case "sl lvl":
                     SelectLevel();
                     Helpers.ReadClear();
                     break;
 
-                case "return":
+                case "dl lvl":
+                    DeleteLevel();
+                    Helpers.ReadClear();
+                    break;
+
+                case "rt":
                     Helpers.OutputYellow("\nReturning to Launcher.");
                     return;
+
+                case "help":
+                    HelpCommands();
+                    Helpers.ReadClear();
+                    break;
 
                 default:
                     Helpers.OutputRed("\n\tNot a valid command.");
@@ -259,6 +283,12 @@ internal class Engine
                     break;
             }
         }
+    }
+
+    public static void HelpCommands() 
+    {
+        Console.Clear();
+        Helpers.OutputYellow("Help\n\n");
     }
 
     public static void AddObject()
@@ -532,13 +562,55 @@ internal class Engine
         Helpers.OutputYellow($" \'{newLevel.Name}\'");
     }
 
+    public static void DeleteLevel()
+    {
+        while (true)
+        {
+            if (ActiveProject.Levels.Count == 0)
+            {
+                Helpers.OutputYellow("\nNo levels available to delete.");
+                return;
+            }
+
+            ListLevels();
+
+            Console.WriteLine("\n\nSelect the level to delete (or enter any key to go back):");
+            string input = Console.ReadLine();
+
+            bool found = false;
+            foreach (var level in ActiveProject.Levels.ToList())
+            {
+                if (level.Name == input)
+                {
+                    if (ActiveProject.ActiveLevel.Name == level.Name) 
+                    {
+                        ActiveProject.ActiveLevel.Name = "None";
+                    }
+
+                    ActiveProject.Levels.Remove(level);
+                    Helpers.OutputGreen($"\n{level.Name} deleted successfully.");
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found)
+            {
+                Helpers.OutputRed($"\n\tLevel with name '{input}' not found. Try again.");
+                Helpers.ReadClear();
+                return;
+            }
+            return;
+        }
+    }
+
     public static void SelectLevel() 
     {
         ListLevels();
 
         if (ActiveProject.Levels.Count == 0) 
         {
-            Helpers.OutputRed("\n\tThere are no levels to load in this project.");
+            Helpers.OutputRed("\nThere are no levels to load in this project.");
             return;
         }
 
@@ -549,8 +621,9 @@ internal class Engine
         if (int.TryParse(userInput, out int input) && input >= 1 && input <= ActiveProject.Levels.Count)
         {
             ActiveProject.ActiveLevel = ActiveProject.Levels[input - 1];
-            Console.Clear();
-            Helpers.OutputYellow("Loaded Level.\n\n");
+            Helpers.OutputGreen($"\nSuccessfully Loaded Level:");
+            Helpers.OutputYellow($" \'{ActiveProject.ActiveLevel.Name}\'\n\n");
+            Helpers.ReadClear();
             EditSpace();
         }
         else
