@@ -23,12 +23,6 @@ internal class Helpers
         Console.ResetColor();
     }
 
-    public static string GenerateString(int length) 
-    {
-        Random random = new();
-        return new(Enumerable.Repeat("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ", length)
-                                                .Select(s => s[random.Next(s.Length)]).ToArray());
-    }
     public static bool Exit()
     {
         while (true)

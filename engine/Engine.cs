@@ -12,19 +12,28 @@ internal class Engine
     {
         //AddSampleProjectAndObject(); // for dev testing
 
-        Helpers.OutputYellow("Loaded Launcher.\n");
+        Helpers.OutputGreen("Loaded Launcher.\n");
         Helpers.ReadClear();
 
         while (true)
         {
             Helpers.OutputYellow($"Engine Home\n");
-            Console.WriteLine($"{ new string('_', 20)}\n");
-            Console.WriteLine("" +
-                "1 |\t Load Projects\n" +
-                "2 |\t Create New Project\n" +
-                "3 |\t Delete Project\n\n" +
-                "4 |\t Engine Help Guide\n\n" +
-                "5 |\t Exit Engine");
+            Console.WriteLine($"{ new string('_', 30)}\n");
+            Console.Write ("1 |");
+            Helpers.OutputYellow("\t Load Projects\n");
+
+            Console.Write("2 |");
+            Helpers.OutputYellow("\t Create New Project\n");
+
+            Console.Write("3 |");
+            Helpers.OutputYellow("\t Delete Project\n\n");
+
+            Console.Write("4 |");
+            Helpers.OutputYellow("\t Engine Help Guide\n\n");
+
+            Console.Write("5 |");
+            Helpers.OutputYellow("\t Exit Engine\n");
+
             string? input = Console.ReadLine();
 
             switch (input)
@@ -35,7 +44,7 @@ internal class Engine
 
                 case "3": DeleteProject(); break;
 
-                case "4": GameInfo.Help(); break;
+                case "4": Help(); break;
 
                 case "5":
                     if (Helpers.Exit()) continue; 
@@ -117,11 +126,8 @@ internal class Engine
 
         } while (string.IsNullOrEmpty(projectDescription));
 
-        string ID = Helpers.GenerateString(8);
-
         List<GameObject> objects = new();
         List<Level> levels = new();
-        //Level level = new("Level 1", objects, false);
         Level level = new("None", objects, false);
 
         Project project = new(projectName, projectDescription, levels, level);
@@ -134,7 +140,6 @@ internal class Engine
         Helpers.ReadClear();
     }
 
-
     public static void DeleteProject()
     {
         if (Projects.Count == 0) 
@@ -146,7 +151,20 @@ internal class Engine
 
         while (true)
         {
-            ListProjects();
+            if (Projects.Count == 0)
+            {
+                Helpers.OutputYellow("\nNo projects to display.");
+                Helpers.ReadClear();
+                return;
+            }
+
+            int projectIndex = 1;
+
+            foreach (var project in Projects)
+            {
+                Helpers.OutputYellow($"\n{projectIndex} | {project.Name}\n  {project.Description}\n\n");
+                projectIndex++;
+            }
 
             Console.WriteLine("\n\nEnter the name of the project to delete (or press any key to go back).");
             string input = Console.ReadLine();
@@ -170,49 +188,24 @@ internal class Engine
         }
     }
 
-    public static void ListObjects()
+    public static void Help()
     {
+        Console.Clear();
+        Helpers.OutputGreen("Welcome.");
+        Console.WriteLine("\n\nThis is a 2D implementation of a basic game engine with generic game mechanics such as:\n");
 
-        if (ActiveProject.ActiveLevel.Objects.Count == 0) 
-        {
-            Helpers.OutputRed("\n\tThis project currently has no objects.");
-            return;
-        }
+        Helpers.OutputYellow("\t- Collision Detection\n" +
+            "\t- Player Movement (built-in)\n" +
+            "\t- Enemies with auto-movement\n\n" +
+            "\t- Saveable projects\n\n\n");
 
-        Console.WriteLine($"\nLoading objects for: {ActiveProject.Name}");
+        Console.Write("To add objects into your game space first,\n\n");
 
-        foreach (var obj in ActiveProject.ActiveLevel.Objects)
-        {
-            Helpers.OutputYellow($"\n  Type: {obj.GetType().Name}\n");
+        Helpers.OutputYellow("\t1. Create a game space\n" +
+        "\t2. Then, add a player object with: 'player playerName 10 10 (the 10, 10, are the players 'spawn coordinates')\n" +
+        "\t3. Now, you can add objects and run your game space.");
 
-            if (obj is Player playerObj) Helpers.OutputYellow($"  Name: {playerObj.Name}\n");
-            else if (obj is Block blockObj) Helpers.OutputYellow($"  Name: {blockObj.Name}\n");
-            else if (obj is Chaser chaserObj) Helpers.OutputYellow($"  Name: {chaserObj.Name}\n");
-            else if (obj is Item itemObj) Helpers.OutputYellow($"  Name: {itemObj.Name}\n");
-            else if (obj is WinTile winTileObj) Helpers.OutputYellow($"  Name: {winTileObj.Name}\n");
-
-        }
-    }
-
-    public static void ListLevels() 
-    {
-        if (ActiveProject.Levels.Count == 0) 
-        {
-            Helpers.OutputRed("\nThere are no levels to list.");
-        }
-
-        Console.WriteLine($"\n\nLoading levels for: {ActiveProject.Name}");
-
-        Helpers.OutputYellow($"\n\tActive Level:");
-        Helpers.OutputGreen($" \'{ActiveProject.ActiveLevel.Name}\'\n\n");
-
-        int index = 0;
-
-        foreach (var level in ActiveProject.Levels)
-        {
-            index++;
-            Helpers.OutputYellow($"\n\t  {index} | {level.Name}");
-        }
+        Helpers.ReadClear();
     }
 
     public static void EditSpace()
@@ -223,50 +216,38 @@ internal class Engine
                 "cr obj         - Create a new object for the currently active level\n" +
                 "dl obj         - Removes an object from the currently active level\n" +
                 "ld obj         - Displays all objects stored in the currently active level\n\n" +
-                
+
                 "cr lvl         - Creates a new level for the currently active project\n" +
                 "dl lvl         - Removes a level from the currently active project\n" +
                 "ld lvl         - Displays all levels stored in the currently active project\n" +
                 "sl lvl         - Selects a level from the currently active project\n\n" +
 
                 "pl             - Runs the current state of the game space\n" +
-                "help           - Shows a list of commands + some other useful information\n\n" + // make user command input text coloured
+                "help           - Shows a list of commands + some other useful information\n\n" +
 
                 "rt             - Return to launcher");
 
+            Console.ForegroundColor = ConsoleColor.Cyan;
             string input = Console.ReadLine().ToLower().Trim();
+            Console.ResetColor();
 
-            switch (input) 
+            switch (input)
             {
                 case "cr obj":
-                    AddObject();
+                    CreateObject();
                     break;
 
                 case "dl obj":
                     DeleteObject();
                     break;
 
-                case "pl":
-                    RunSpace();
-                    break;
-
                 case "ld obj":
-                    ListObjects();
-                    Helpers.ReadClear();
-                    break;
-
-                case "ld lvl":
-                    ListLevels();
+                    LoadObjects();
                     Helpers.ReadClear();
                     break;
 
                 case "cr lvl":
-                    AddLevel();
-                    Helpers.ReadClear();
-                    break;
-
-                case "sl lvl":
-                    SelectLevel();
+                    CreateLevel();
                     Helpers.ReadClear();
                     break;
 
@@ -275,14 +256,28 @@ internal class Engine
                     Helpers.ReadClear();
                     break;
 
-                case "rt":
-                    Helpers.OutputYellow("\nReturning to Launcher.");
-                    return;
+                case "ld lvl":
+                    LoadLevels();
+                    Helpers.ReadClear();
+                    break;
+
+                case "sl lvl":
+                    SelectLevel();
+                    Helpers.ReadClear();
+                    break;
+
+                case "pl":
+                    RunSpace();
+                    break;
 
                 case "help":
                     HelpCommands();
                     Helpers.ReadClear();
                     break;
+
+                case "rt":
+                    Helpers.OutputYellow("\nReturning to Launcher.");
+                    return;
 
                 default:
                     Helpers.OutputRed("\n\tNot a valid command.");
@@ -292,13 +287,7 @@ internal class Engine
         }
     }
 
-    public static void HelpCommands() 
-    {
-        Console.Clear();
-        Helpers.OutputYellow("Help\n\n");
-    }
-
-    public static void AddObject()
+    public static void CreateObject()
     {
         while (true)
         {
@@ -307,25 +296,25 @@ internal class Engine
 
             if (command == "block")
             {
-                AddMultipleObjects(command);
+                Operations.AddMultipleObjects(command);
                 return;
             }
 
             else if (command == "item")
             {
-                AddMultipleObjects(command);
+                Operations.AddMultipleObjects(command);
                 return;
             }
 
-            else if (command == "win") 
+            else if (command == "win")
             {
-                AddMultipleObjects(command);
+                Operations.AddMultipleObjects(command);
                 return;
             }
 
             else if (command == "chaser")
             {
-                AddMultipleObjects(command);
+                Operations.AddMultipleObjects(command);
                 return;
             }
 
@@ -383,9 +372,9 @@ internal class Engine
                         break;
 
                     default:
-                    Helpers.OutputRed("\n\tNot a valid object type");
-                    Helpers.ReadClear();
-                    return;
+                        Helpers.OutputRed("\n\tNot a valid object type");
+                        Helpers.ReadClear();
+                        return;
                 }
 
                 Helpers.OutputGreen("\n\tAdded object: ");
@@ -402,7 +391,6 @@ internal class Engine
         }
     }
 
-
     public static void DeleteObject()
     {
         while (true)
@@ -414,7 +402,7 @@ internal class Engine
                 return;
             }
 
-            ListObjects();
+            LoadObjects();
 
             Console.WriteLine("\nSelect the object to delete (or enter any key to go back):");
             string input = Console.ReadLine();
@@ -442,21 +430,131 @@ internal class Engine
         }
     }
 
-    public static void ListProjects() 
+    public static void LoadObjects()
     {
-        if (Projects.Count == 0)
+
+        if (ActiveProject.ActiveLevel.Objects.Count == 0) 
         {
-            Helpers.OutputYellow("\nNo projects to display.");
-            Helpers.ReadClear();
+            Helpers.OutputRed("\n\tThis project currently has no objects.");
             return;
         }
 
-        int projectIndex = 1;
+        Console.WriteLine($"\nLoading objects for: {ActiveProject.Name}");
 
-        foreach (var project in Projects)
+        foreach (var obj in ActiveProject.ActiveLevel.Objects)
         {
-            Helpers.OutputYellow($"\n{projectIndex} | {project.Name}\n  {project.Description}\n\n");
-            projectIndex++;
+            Helpers.OutputYellow($"\n  Type: {obj.GetType().Name}\n");
+
+            if (obj is Player playerObj) Helpers.OutputYellow($"  Name: {playerObj.Name}\n");
+            else if (obj is Block blockObj) Helpers.OutputYellow($"  Name: {blockObj.Name}\n");
+            else if (obj is Chaser chaserObj) Helpers.OutputYellow($"  Name: {chaserObj.Name}\n");
+            else if (obj is Item itemObj) Helpers.OutputYellow($"  Name: {itemObj.Name}\n");
+            else if (obj is WinTile winTileObj) Helpers.OutputYellow($"  Name: {winTileObj.Name}\n");
+
+        }
+    }
+
+    public static void CreateLevel()
+    {
+        Console.WriteLine("\nEnter the name of your new level");
+        string input = Console.ReadLine();
+        List<GameObject> newObjectList = new();
+
+        Level newLevel = new(input, newObjectList, false);
+        ActiveProject.Levels.Add(newLevel);
+        Helpers.OutputGreen($"\nAdded level");
+        Helpers.OutputYellow($" \'{newLevel.Name}\'");
+    }
+
+    public static void DeleteLevel()
+    {
+        while (true)
+        {
+            if (ActiveProject.Levels.Count == 0)
+            {
+                Helpers.OutputYellow("\nNo levels available to delete.");
+                return;
+            }
+
+            LoadLevels();
+
+            Console.WriteLine("\n\nSelect the level to delete (or enter any key to go back):");
+            string input = Console.ReadLine();
+
+            bool found = false;
+            foreach (var level in ActiveProject.Levels.ToList())
+            {
+                if (level.Name == input)
+                {
+                    if (ActiveProject.ActiveLevel.Name == level.Name)
+                    {
+                        ActiveProject.ActiveLevel.Name = "None";
+                    }
+
+                    ActiveProject.Levels.Remove(level);
+                    Helpers.OutputGreen($"\n{level.Name} deleted successfully.");
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found)
+            {
+                Helpers.OutputRed($"\n\tLevel with name '{input}' not found. Try again.");
+                Helpers.ReadClear();
+                return;
+            }
+            return;
+        }
+    }
+
+    public static void LoadLevels() 
+    {
+        if (ActiveProject.Levels.Count == 0) 
+        {
+            Helpers.OutputRed("\nThere are no levels to list.");
+        }
+
+        Console.WriteLine($"\n\nLoading levels for: {ActiveProject.Name}");
+
+        Helpers.OutputYellow($"\n\tActive Level:");
+        Helpers.OutputGreen($" \'{ActiveProject.ActiveLevel.Name}\'\n\n");
+
+        int index = 0;
+
+        foreach (var level in ActiveProject.Levels)
+        {
+            index++;
+            Helpers.OutputYellow($"\n\t  {index} | {level.Name}");
+        }
+    }
+
+    public static void SelectLevel()
+    {
+        LoadLevels();
+
+        if (ActiveProject.Levels.Count == 0)
+        {
+            Helpers.OutputRed("\nThere are no levels to load in this project.");
+            return;
+        }
+
+        Console.WriteLine("\n\nChoose a level to edit or test");
+
+        string userInput = Console.ReadLine();
+
+        if (int.TryParse(userInput, out int input) && input >= 1 && input <= ActiveProject.Levels.Count)
+        {
+            ActiveProject.ActiveLevel = ActiveProject.Levels[input - 1];
+            Helpers.OutputGreen($"\nSuccessfully Loaded Level:");
+            Helpers.OutputYellow($" \'{ActiveProject.ActiveLevel.Name}\'\n\n");
+            Helpers.ReadClear();
+            EditSpace();
+        }
+        else
+        {
+            Helpers.OutputRed("\n\tInvalid input. Please enter a valid level number (or press any key to go back).");
+            return;
         }
     }
 
@@ -489,11 +587,11 @@ internal class Engine
 
             if (inInventory)
             {
-                DisplayInventory(player);
+                Operations.DisplayInventory(player);
             }
             else
             {
-                DisplaySpace();
+                Operations.DisplaySpace();
             }
 
             ConsoleKeyInfo keyInfo = Console.ReadKey();
@@ -501,30 +599,30 @@ internal class Engine
             switch (keyInfo.Key)
             {
                 case ConsoleKey.UpArrow:
-                    if (!inInventory) MovePlayer(0, -1, pickedUpItems, ref gameSpaceActive);
+                    if (!inInventory) Operations.MovePlayer(0, -1, pickedUpItems, ref gameSpaceActive);
                     break;
 
                 case ConsoleKey.DownArrow:
-                    if (!inInventory) MovePlayer(0, 1, pickedUpItems, ref gameSpaceActive);
+                    if (!inInventory) Operations.MovePlayer(0, 1, pickedUpItems, ref gameSpaceActive);
                     break;
 
                 case ConsoleKey.LeftArrow:
-                    if (!inInventory) MovePlayer(-1, 0, pickedUpItems, ref gameSpaceActive);
+                    if (!inInventory) Operations.MovePlayer(-1, 0, pickedUpItems, ref gameSpaceActive);
                     break;
 
                 case ConsoleKey.RightArrow:
-                    if (!inInventory) MovePlayer(1, 0, pickedUpItems, ref gameSpaceActive);
+                    if (!inInventory) Operations.MovePlayer(1, 0, pickedUpItems, ref gameSpaceActive);
                     break;
 
                 case ConsoleKey.I:
-                    ToggleInventory(player, ref inInventory);
+                    Operations.ToggleInventory(player, ref inInventory);
                     break;
 
                 case ConsoleKey.Escape:
                     Console.Clear();
                     Console.Write("C");
-                    ResetPlayerPosition();
-                    ResetPlayerInventory(pickedUpItems);
+                    Operations.ResetPlayerPosition();
+                    Operations.ResetPlayerInventory(pickedUpItems);
                     return;
 
                 default:
@@ -539,264 +637,29 @@ internal class Engine
                 }
             }
 
-            foreach (Chaser chaserObj in ActiveProject.ActiveLevel.Objects.OfType<Chaser>()) 
+            foreach (Chaser chaserObj in ActiveProject.ActiveLevel.Objects.OfType<Chaser>())
             {
                 if (player != null && chaserObj != null && player.X == chaserObj.X && player.Y == chaserObj.Y)
                 {
                     Console.Clear();
                     Helpers.OutputRed("\n\tPlayer caught by chaser. Game over!");
                     Helpers.ReadClear();
-                    ResetPlayerPosition();
-                    ResetPlayerInventory(pickedUpItems);
+                    Operations.ResetPlayerPosition();
+                    Operations.ResetPlayerInventory(pickedUpItems);
                     return;
                 }
             }
         }
 
-        ResetPlayerPosition();
-        ResetPlayerInventory(pickedUpItems);
+        Operations.ResetPlayerPosition();
+        Operations.ResetPlayerInventory(pickedUpItems);
     }
 
-    public static void AddLevel() 
+    public static void HelpCommands() 
     {
-        Console.WriteLine("\nEnter the name of your new level");
-        string input = Console.ReadLine();
-        List<GameObject> newObjectList = new();
-
-        Level newLevel = new(input, newObjectList, false);
-        ActiveProject.Levels.Add(newLevel);
-        Helpers.OutputGreen($"\nAdded level");
-        Helpers.OutputYellow($" \'{newLevel.Name}\'");
-    }
-
-    public static void DeleteLevel()
-    {
-        while (true)
-        {
-            if (ActiveProject.Levels.Count == 0)
-            {
-                Helpers.OutputYellow("\nNo levels available to delete.");
-                return;
-            }
-
-            ListLevels();
-
-            Console.WriteLine("\n\nSelect the level to delete (or enter any key to go back):");
-            string input = Console.ReadLine();
-
-            bool found = false;
-            foreach (var level in ActiveProject.Levels.ToList())
-            {
-                if (level.Name == input)
-                {
-                    if (ActiveProject.ActiveLevel.Name == level.Name) 
-                    {
-                        ActiveProject.ActiveLevel.Name = "None";
-                    }
-
-                    ActiveProject.Levels.Remove(level);
-                    Helpers.OutputGreen($"\n{level.Name} deleted successfully.");
-                    found = true;
-                    break;
-                }
-            }
-
-            if (!found)
-            {
-                Helpers.OutputRed($"\n\tLevel with name '{input}' not found. Try again.");
-                Helpers.ReadClear();
-                return;
-            }
-            return;
-        }
-    }
-
-    public static void SelectLevel() 
-    {
-        ListLevels();
-
-        if (ActiveProject.Levels.Count == 0) 
-        {
-            Helpers.OutputRed("\nThere are no levels to load in this project.");
-            return;
-        }
-
-        Console.WriteLine("\n\nChoose a level to edit or test");
-
-        string userInput = Console.ReadLine();
-
-        if (int.TryParse(userInput, out int input) && input >= 1 && input <= ActiveProject.Levels.Count)
-        {
-            ActiveProject.ActiveLevel = ActiveProject.Levels[input - 1];
-            Helpers.OutputGreen($"\nSuccessfully Loaded Level:");
-            Helpers.OutputYellow($" \'{ActiveProject.ActiveLevel.Name}\'\n\n");
-            Helpers.ReadClear();
-            EditSpace();
-        }
-        else
-        {
-            Helpers.OutputRed("\n\tInvalid input. Please enter a valid level number (or press any key to go back).");
-            return;
-        }
-    }
-
-    private static void ToggleInventory(Player player, ref bool inInventory)
-    {
-        inInventory = !inInventory;
-
         Console.Clear();
-
-        if (inInventory)  DisplayInventory(player);
-        else DisplaySpace();
-    }
-
-    private static void DisplayInventory(Player player)
-    {
-        Console.WriteLine("Inventory:");
-
-        foreach (var item in player.Inventory) Console.WriteLine($"- {item.Name}");
-
-        Console.WriteLine("\nPress 'i' again to close inventory.");
-        Console.SetCursorPosition(player.X, player.Y);
-    }
-
-
-
-    private static void MovePlayer(int deltaX, int deltaY, List<Item> pickedUpItems, ref bool gameSpaceActive)
-    {
-        Player player = ActiveProject.ActiveLevel.Objects.OfType<Player>().FirstOrDefault();
-
-        if (player != null)
-        {
-            int newX = player.X + deltaX;
-            int newY = player.Y + deltaY;
-
-            if (newX >= 0 && newX < Console.WindowWidth && newY >= 0 && newY < Console.WindowHeight)
-            {
-                bool tileBlocked = ActiveProject.ActiveLevel.Objects.OfType<Block>().Any(block =>
-                    block.X == newX && block.Y == newY);
-
-                if (!tileBlocked)
-                {
-                    player.X = newX;
-                    player.Y = newY;
-
-                    WinTile winTile = ActiveProject.ActiveLevel.Objects.OfType<WinTile>().FirstOrDefault(winTile =>
-                        winTile.X == newX && winTile.Y == newY);
-
-                    if (winTile is WinTile)
-                    {
-                        Console.Clear();
-                        Helpers.OutputGreen("\n\tCongratulations! You won!");
-                        Helpers.ReadClear();
-                        ResetPlayerPosition();
-                        ResetPlayerInventory(pickedUpItems);
-                        gameSpaceActive = false;
-                        return;
-                    }
-
-                    Item tileItem = ActiveProject.ActiveLevel.Objects.OfType<Item>().FirstOrDefault(item =>
-                        item.X == newX && item.Y == newY);
-
-                    if (tileItem != null)
-                    {
-                        player.Inventory.Add(tileItem);
-                        ActiveProject.ActiveLevel.Objects.Remove(tileItem);
-                        pickedUpItems.Add(tileItem);
-                    }
-                }
-            }
-        }
-    }
-
-    private static void ResetPlayerPosition()
-    {
-        Player player = ActiveProject.ActiveLevel.Objects.OfType<Player>().FirstOrDefault();
-        Chaser chaser = ActiveProject.ActiveLevel.Objects.OfType<Chaser>().FirstOrDefault();
-
-        if (player is not null)
-        {
-            player.X = player.OriginalX;
-            player.Y = player.OriginalY;
-        }
-
-        if (chaser is not null)
-        {
-            chaser.X = chaser.OriginalX;
-            chaser.Y = chaser.OriginalY;
-        }
-    }
-
-    private static void ResetPlayerInventory(List<Item> pickedUpItems) 
-    {
-        Player player = ActiveProject.ActiveLevel.Objects.OfType<Player>().FirstOrDefault();
-        if (player is not null) player.Inventory.Clear();
-
-        foreach (Item item in pickedUpItems)
-        {
-            ActiveProject.ActiveLevel.Objects.Add(item);
-        }
-    }
-
-    private static void DisplaySpace()
-    {
-        Console.SetCursorPosition(0, 28);
-        Console.Write("GameSpace");
-
-        Console.SetCursorPosition(0, 29);
-        Console.Write($"Active: {ActiveProject.ActiveLevel.Name}");
-
-        Console.SetCursorPosition(0, 28);
-        Console.Write(new string('_', 120));
-
-        Console.SetCursorPosition(0, 0);
-
-        int windowWidth = Console.WindowWidth;
-        int windowHeight = Console.WindowHeight;
-
-        foreach (var obj in ActiveProject.ActiveLevel.Objects)
-        {
-            int x = obj.X;
-            int y = obj.Y;
-
-            x = Math.Max(0, Math.Min(x, windowWidth - 1));
-            y = Math.Max(0, Math.Min(y, windowHeight - 1));
-
-            Console.SetCursorPosition(x, y)
-                ;
-            if (obj is Player)
-            {
-                Console.ForegroundColor = ConsoleColor.Blue;
-                Console.Write("P");
-            }
-
-            else if (obj is Block)
-            {
-                Console.ForegroundColor = ConsoleColor.White;
-                Console.Write("+");
-            }
-
-            else if (obj is Chaser)
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.Write("0");
-            }
-
-            else if (obj is Item)
-            {
-                Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.Write("i");
-            }
-
-            else if (obj is WinTile)
-            {
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.Write("X");
-            }
-
-            Console.ResetColor();
-        }
-    }
+        Helpers.OutputYellow("Help\n\n");
+    } 
 
     public static void AddSampleProjectAndObject()
     {
@@ -821,135 +684,6 @@ internal class Engine
         };
 
         Project sampleProject = new("Test", "Test Description", levels, testLevel);
-        Projects.Add(sampleProject);
+       Projects.Add(sampleProject);
     }
-
-    public static void AddMultipleObjects(string objectType)
-    {
-        GameObject tempObject = null;
-
-        while (true)
-        {
-            Console.Clear();
-            DisplaySpace();
-
-            Console.ForegroundColor = GetObjectColor(objectType);
-
-            foreach (var obj in ActiveProject.ActiveLevel.Objects)
-            {
-                if (obj is GameObject gameObject && gameObject.Type == objectType)
-                {
-                    Console.SetCursorPosition(gameObject.X, gameObject.Y);
-                    Console.Write(GetObjectSymbol(objectType));
-                }
-            }
-
-            if (tempObject != null)
-            {
-                Console.SetCursorPosition(tempObject.X, tempObject.Y);
-                Console.Write(GetObjectSymbol(objectType));
-            }
-
-            Console.ResetColor();
-
-            ConsoleKeyInfo keyInfo = Console.ReadKey();
-
-            switch (keyInfo.Key)
-            {
-                case ConsoleKey.UpArrow:
-                    tempObject = CreateObject(tempObject, objectType, tempObject?.X ?? 0, tempObject?.Y - 1 ?? 0);
-                    break;
-
-                case ConsoleKey.DownArrow:
-                    tempObject = CreateObject(tempObject, objectType, tempObject?.X ?? 0, tempObject?.Y + 1 ?? 0);
-                    break;
-
-                case ConsoleKey.LeftArrow:
-                    tempObject = CreateObject(tempObject, objectType, tempObject?.X - 1 ?? 0, tempObject?.Y ?? 0);
-                    break;
-
-                case ConsoleKey.RightArrow:
-                    tempObject = CreateObject(tempObject, objectType, tempObject?.X + 1 ?? 0, tempObject?.Y ?? 0);
-                    break;
-
-                case ConsoleKey.Enter:
-                    if (tempObject is not null) ActiveProject.ActiveLevel.Objects.Add(tempObject);
-                    break;
-
-                case ConsoleKey.Escape:
-                    Console.Clear();
-                    return;
-
-                default:
-                    break;
-            }
-        }
-    }
-
-
-    private static ConsoleColor GetObjectColor(string objectType)
-    {
-        switch (objectType)
-        {
-            case "item":
-                return ConsoleColor.Cyan;
-
-            case "win":
-                return ConsoleColor.Green;
-
-            case "chaser":
-                return ConsoleColor.Red;
-
-            case "block":
-                return ConsoleColor.White;
-
-            default:
-                return ConsoleColor.Black;
-        }
-    }
-
-    private static char GetObjectSymbol(string objectType)
-    {
-        switch (objectType)
-        {
-            case "item":
-                return 'i';
-
-            case "win":
-                return 'X';
-
-            case "block":
-                return '+';
-
-            case "chaser":
-                return '0';
-
-            default:
-                return ' ';
-        }
-    }
-
-    private static GameObject CreateObject(GameObject existingObject, string objectType, int x, int y)
-    {
-        switch (objectType)
-        {
-            case "block":
-                return new Block(x, y, objectType);
-
-            case "item":
-                return new Item(x, y, objectType);
-
-            case "win":
-                return new WinTile(x, y, objectType);
-
-            case "chaser":
-                return new Chaser(x, y, objectType);
-
-            default:
-                break;
-        }
-
-        return existingObject;
-    }
-
 }

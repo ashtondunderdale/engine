@@ -1,5 +1,23 @@
-﻿namespace Engine
+﻿using engine;
+
+namespace Engine
 {
+    internal class Project
+    {
+        public string Name;
+        public string Description;
+        public List<Level> Levels;
+        public Level ActiveLevel;
+
+        public Project(string Name, string Description, List<Level> levels, Level activeLevel)
+        {
+            this.Name = Name;
+            this.Description = Description;
+            this.Levels = levels;
+            this.ActiveLevel = activeLevel;
+        }
+    }
+
     internal class GameObject
     {
         public int X { get; set; }
